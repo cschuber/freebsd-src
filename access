@@ -1,5 +1,5 @@
 #
-# $FreeBSD: CVSROOT/access,v 1.177 2000/08/23 09:52:31 dwmalone Exp $
+# $FreeBSD: CVSROOT/access,v 1.178 2000/08/29 17:12:02 gshapiro Exp $
 #
 # Please try to keep the handbook (contrib/chapter.sgml authors.ent
 # staff/chapter.sgml) in in sync with this.
@@ -190,7 +190,7 @@ groudier
 reg
 ade
 patrick
-wilko
+wilko commits@freebie.demon.nl
 unfurl
 gsutter
 bsd
