@@ -1,5 +1,5 @@
 #
-# $FreeBSD: CVSROOT/access,v 1.162 2000/07/06 01:45:23 kuriyama Exp $
+# $FreeBSD: CVSROOT/access,v 1.163 2000/07/06 17:18:36 imp Exp $
 #
 # Please try to keep the handbook (contrib/chapter.sgml authors.ent
 # staff/chapter.sgml) in in sync with this.
@@ -225,3 +225,4 @@ horikawa
 hrs
 toshi
 takawata
+dannyboy
