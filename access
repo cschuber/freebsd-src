@@ -1,5 +1,5 @@
 #
-# $FreeBSD: CVSROOT/access,v 1.110 1999/09/02 06:35:10 mpp Exp $
+# $FreeBSD: CVSROOT/access,v 1.111 1999/09/03 11:30:53 nik Exp $
 #
 # Please try to keep the handbook (contrib/chapter.sgml authors.ent) in
 # in sync with this.
@@ -179,3 +179,4 @@ jim
 jhb
 phantom
 gioria
+andy
