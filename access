@@ -1,5 +1,5 @@
 #
-# $FreeBSD: CVSROOT/access,v 1.209 2001/02/05 07:42:12 kris Exp $
+# $FreeBSD: CVSROOT/access,v 1.210 2001/02/20 19:38:36 phk Exp $
 #
 # Please try to keep the handbook (contrib/chapter.sgml authors.ent
 # staff/chapter.sgml) in in sync with this.
@@ -260,3 +260,4 @@ olgeni
 dinoex
 mikeh
 jesper
+orion
