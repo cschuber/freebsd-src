@@ -1,5 +1,5 @@
 #
-# $FreeBSD: CVSROOT/access,v 1.163 2000/07/06 17:18:36 imp Exp $
+# $FreeBSD: CVSROOT/access,v 1.164 2000/07/07 08:03:37 nik Exp $
 #
 # Please try to keep the handbook (contrib/chapter.sgml authors.ent
 # staff/chapter.sgml) in in sync with this.
@@ -226,3 +226,4 @@ hrs
 toshi
 takawata
 dannyboy
+marko
