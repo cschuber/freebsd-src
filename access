@@ -1,5 +1,5 @@
 #
-# $FreeBSD: CVSROOT/access,v 1.176 2000/08/22 18:40:02 nik Exp $
+# $FreeBSD: CVSROOT/access,v 1.177 2000/08/23 09:52:31 dwmalone Exp $
 #
 # Please try to keep the handbook (contrib/chapter.sgml authors.ent
 # staff/chapter.sgml) in in sync with this.
@@ -227,7 +227,7 @@ marko
 ben
 dwmalone	dwmalone=freebsd-committers@maths.tcd.ie
 kbyanc
-gshapiro
+gshapiro	gshapiro+freebsd-cvs-committers@gshapiro.net
 babkin
 onoe
 rv
