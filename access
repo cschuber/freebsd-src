@@ -1,5 +1,5 @@
 #
-# $FreeBSD: CVSROOT/access,v 1.191 2000/11/09 06:19:24 knu Exp $
+# $FreeBSD: CVSROOT/access,v 1.192 2000/11/09 23:44:23 rv Exp $
 #
 # Please try to keep the handbook (contrib/chapter.sgml authors.ent
 # staff/chapter.sgml) in in sync with this.
@@ -242,3 +242,4 @@ benno
 keith
 kiri
 okazaki
+issei
