@@ -1,5 +1,5 @@
 #
-# $FreeBSD: CVSROOT/access,v 1.161 2000/07/03 18:40:45 phk Exp $
+# $FreeBSD: CVSROOT/access,v 1.162 2000/07/06 01:45:23 kuriyama Exp $
 #
 # Please try to keep the handbook (contrib/chapter.sgml authors.ent
 # staff/chapter.sgml) in in sync with this.
@@ -223,3 +223,5 @@ uch
 adrian
 horikawa
 hrs
+toshi
+takawata
