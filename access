@@ -1,5 +1,5 @@
 #
-# $FreeBSD: CVSROOT/access,v 1.256 2001/08/27 15:28:16 imp Exp $
+# $FreeBSD: CVSROOT/access,v 1.257 2001/09/11 16:37:02 imp Exp $
 #
 # Please try to keep the handbook (contrib/chapter.sgml authors.ent
 # staff/chapter.sgml) in in sync with this.
@@ -264,7 +264,7 @@ keichii
 dd
 eric
 yar
-greid
+greid		devnull
 schweikh
 ue
 tshiozak
