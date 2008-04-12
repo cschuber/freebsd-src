@@ -18,6 +18,17 @@
 # Changes to email forwards can be made without core's approval.  Please
 # use "Approved by: core (implicit)" to that type of commits.
 #
+
+#
+# The entries below are not 'committers' but 'contributors' who benefit
+# from being able to read developers@ email.  Pending the adaptation of
+# our email magic for this category of people, they are placed in access
+# with core's specific approval.
+#
+dvl
+plosher
+
+# Real committers follow.
 ache
 ade
 adrian
