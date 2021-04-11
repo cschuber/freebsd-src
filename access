@@ -1,7 +1,5 @@
-# $FreeBSD$
-#
-# Please try to keep the handbook (contrib/chapter.sgml authors.ent
-# staff/chapter.sgml) in sync with this.
+# Please try to keep the handbook (documentation/content/en/articles/contributors/contrib-committers.adoc
+# documentation/content/en/articles/contributors/contrib-develalumni.adoc shared/authors.toml ) in sync with this.
 #
 #	KEEP ALPHABETICALLY SORTED!!!
 #	KEEP ALPHABETICALLY SORTED!!!
@@ -28,7 +26,6 @@ andreast
 andrew
 anish
 antoine
-araujo
 arichardson
 arybchik
 asomers
@@ -67,7 +64,6 @@ dougm
 dteske
 dwmalone	dwmalone=freebsd-committers@maths.tcd.ie
 eadler
-ed
 emaste
 emax
 erj
@@ -107,7 +103,6 @@ jlh
 jmallett
 jmg
 joerg	freebsd-devel@uriah.heep.sax.de
-jpaetzel
 jrtc27
 jtl
 julian
