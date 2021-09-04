@@ -481,6 +481,8 @@ static void bge_sig_pre_reset(struct bge_softc *, int);
 static void bge_stop_fw(struct bge_softc *);
 static int bge_reset(struct bge_softc *);
 static void bge_link_upd(struct bge_softc *);
+static void bge_setwol(struct bge_softc *);
+static void bge_clrwol(struct bge_softc *);
 
 static void bge_ape_lock_init(struct bge_softc *);
 static void bge_ape_read_fw_ver(struct bge_softc *);
@@ -892,6 +894,7 @@ bge_ape_send_event(struct bge_softc *sc, uint32_t event)
 static void
 bge_ape_driver_state_change(struct bge_softc *sc, int kind)
 {
+	struct ifnet *ifp;
 	uint32_t apedata, event;
 
 	if ((sc->bge_mfw_flags & BGE_MFW_ON_APE) == 0)
@@ -924,8 +927,24 @@ bge_ape_driver_state_change(struct bge_softc *sc, int kind)
 		event = BGE_APE_EVENT_STATUS_STATE_START;
 		break;
 	case BGE_RESET_SHUTDOWN:
-		APE_WRITE_4(sc, BGE_APE_HOST_DRVR_STATE,
-		    BGE_APE_HOST_DRVR_STATE_UNLOAD);
+                /* XXX  Needs rewording
+                 * With the interface we are currently using,
+                 * APE does not track driver state.  Wiping
+                 * out the HOST SEGMENT SIGNATURE forces
+                 * the APE to assume OS absent status.
+                 */
+		APE_WRITE_4(sc, BGE_APE_HOST_SEG_SIG, 0);
+
+		ifp = sc->bge_ifp;
+		if ((if_getcapenable(ifp) & IFCAP_WOL) != 0) {
+		    APE_WRITE_4(sc, BGE_APE_HOST_WOL_SPEED,
+			BGE_APE_HOST_WOL_SPEED_AUTO);
+		    APE_WRITE_4(sc, BGE_APE_HOST_DRVR_STATE,
+			BGE_APE_HOST_DRVR_STATE_WOL);
+		} else {
+		    APE_WRITE_4(sc, BGE_APE_HOST_DRVR_STATE,
+			BGE_APE_HOST_DRVR_STATE_UNLOAD);
+		}
 		event = BGE_APE_EVENT_STATUS_STATE_UNLOAD;
 		break;
 	case BGE_RESET_SUSPEND:
@@ -3732,7 +3751,7 @@ bge_attach(device_t dev)
 	if_setsendqready(ifp);
 	if_sethwassist(ifp, sc->bge_csum_features);
 	if_setcapabilities(ifp, IFCAP_HWCSUM | IFCAP_VLAN_HWTAGGING |
-	    IFCAP_VLAN_MTU);
+	    IFCAP_VLAN_MTU | IFCAP_WOL_MAGIC);
 	if ((sc->bge_flags & (BGE_FLAG_TSO | BGE_FLAG_TSO3)) != 0) {
 		if_sethwassistbits(ifp, CSUM_TSO, 0);
 		if_setcapabilitiesbit(ifp, IFCAP_TSO4 | IFCAP_VLAN_HWTSO, 0);
@@ -3740,6 +3759,8 @@ bge_attach(device_t dev)
 #ifdef IFCAP_VLAN_HWCSUM
 	if_setcapabilitiesbit(ifp, IFCAP_VLAN_HWCSUM, 0);
 #endif
+	if (pci_find_cap(dev, PCIY_PMG, &reg) == 0)
+		if_setcapabilitiesbit(ifp, IFCAP_WOL_MAGIC, 0);
 	if_setcapenable(ifp, if_getcapabilities(ifp));
 #ifdef DEVICE_POLLING
 	if_setcapabilitiesbit(ifp, IFCAP_POLLING, 0);
@@ -3925,6 +3946,9 @@ again:
 		device_printf(sc->bge_dev, "couldn't set up irq\n");
 		goto fail;
 	}
+	BGE_LOCK(sc);
+	bge_clrwol(sc);
+	BGE_UNLOCK(sc);
 
 	/* Attach driver debugnet methods. */
 	DEBUGNET_SET(ifp, bge);
@@ -5845,6 +5869,9 @@ bge_ioctl(if_t ifp, u_long command, caddr_t data)
 			}
 		}
 #endif
+		if ((mask & IFCAP_WOL_MAGIC) != 0 &&
+			(if_getcapabilities(ifp) & IFCAP_WOL_MAGIC) != 0)
+				if_togglecapenable(ifp, IFCAP_WOL_MAGIC);
 		if ((mask & IFCAP_TXCSUM) != 0 &&
 		    (if_getcapabilities(ifp) & IFCAP_TXCSUM) != 0) {
 			if_togglecapenable(ifp, IFCAP_TXCSUM);
@@ -6072,6 +6099,7 @@ bge_shutdown(device_t dev)
 
 	sc = device_get_softc(dev);
 	BGE_LOCK(sc);
+	bge_setwol(sc);
 	bge_stop(sc);
 	BGE_UNLOCK(sc);
 
@@ -6085,6 +6113,7 @@ bge_suspend(device_t dev)
 
 	sc = device_get_softc(dev);
 	BGE_LOCK(sc);
+	bge_setwol(sc);
 	bge_stop(sc);
 	BGE_UNLOCK(sc);
 
@@ -6100,11 +6129,13 @@ bge_resume(device_t dev)
 	sc = device_get_softc(dev);
 	BGE_LOCK(sc);
 	ifp = sc->bge_ifp;
+	bge_reset(sc);
 	if (if_getflags(ifp) & IFF_UP) {
 		bge_init_locked(sc);
 		if (if_getdrvflags(ifp) & IFF_DRV_RUNNING)
 			bge_start_locked(ifp);
 	}
+	bge_clrwol(sc);
 	BGE_UNLOCK(sc);
 
 	return (0);
@@ -6777,6 +6808,60 @@ bge_get_counter(if_t ifp, ift_counter cnt)
 	default:
 		return (if_get_counter_default(ifp, cnt));
 	}
+}
+
+static void
+bge_setwol(struct bge_softc *sc)
+{
+	struct ifnet *ifp;
+	uint16_t pmstat;
+	int pmc;
+
+	ifp = sc->bge_ifp;
+	if ((if_getcapabilities(ifp) & IFCAP_WOL_MAGIC) == 0)
+		return;
+	if (pci_find_cap(sc->bge_dev, PCIY_PMG, &pmc) != 0)
+		return;
+	if ((if_getcapenable(ifp) & IFCAP_WOL) != 0) {
+		BGE_SETBIT(sc, BGE_MAC_MODE, BGE_MACMODE_MAGIC_PKT_ENB);
+		BGE_SETBIT(sc, BGE_MAC_MODE, BGE_MACMODE_ACPI_PWRON_ENB);
+		BGE_CLRBIT(sc, BGE_MAC_MODE, BGE_MACMODE_PORTMODE);
+		BGE_SETBIT(sc, BGE_MAC_MODE, BGE_PORTMODE_GMII);
+		BGE_SETBIT(sc, BGE_RX_MODE, BGE_RXMODE_ENABLE);
+	}
+	else {
+		BGE_CLRBIT(sc, BGE_MAC_MODE, BGE_MACMODE_MAGIC_PKT_ENB);
+		BGE_CLRBIT(sc, BGE_MAC_MODE, BGE_MACMODE_ACPI_PWRON_ENB);
+	}
+
+	/* Request PME if WOL is requested. */
+	pmstat = pci_read_config(sc->bge_dev, pmc + PCIR_POWER_STATUS, 2);
+	pmstat &= ~(PCIM_PSTAT_PME | PCIM_PSTAT_PMEENABLE);
+	if ((if_getcapenable(ifp) & IFCAP_WOL) != 0)
+		pmstat |= PCIM_PSTAT_PME | PCIM_PSTAT_PMEENABLE;
+	pci_write_config(sc->bge_dev, pmc + PCIR_POWER_STATUS, pmstat, 2);
+}
+
+static void
+bge_clrwol(struct bge_softc *sc)
+{
+	struct ifnet *ifp;
+	uint16_t pmstat;
+	int pmc;
+
+	ifp = sc->bge_ifp;
+	if ((if_getcapabilities(ifp) & IFCAP_WOL) == 0)
+		return;
+	if (pci_find_cap(sc->bge_dev, PCIY_PMG, &pmc) != 0)
+		return;
+	if ((if_getcapenable(ifp) & IFCAP_WOL) == 0)
+		return;
+	BGE_CLRBIT(sc, BGE_MAC_MODE, BGE_MACMODE_MAGIC_PKT_ENB);
+	BGE_CLRBIT(sc, BGE_MAC_MODE, BGE_MACMODE_ACPI_PWRON_ENB);
+
+	pmstat = pci_read_config(sc->bge_dev, pmc + PCIR_POWER_STATUS, 2);
+	pmstat &= ~(PCIM_PSTAT_PME | PCIM_PSTAT_PMEENABLE);
+	pci_write_config(sc->bge_dev, pmc + PCIR_POWER_STATUS, pmstat, 2);
 }
 
 #ifdef DEBUGNET
