@@ -7,7 +7,11 @@
 #define	__RADIX_IPF_H__
 
 #ifndef RADIX_T
+# ifdef __LP64__
+typedef unsigned __int128 radix_t;
+# else
 typedef unsigned int radix_t;
+# endif
 # define	RADIX_T	1
 #endif
 
