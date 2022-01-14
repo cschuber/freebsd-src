@@ -6,15 +6,15 @@
 #ifndef __RADIX_IPF_H__
 #define	__RADIX_IPF_H__
 
-#ifndef U_32_T
-typedef unsigned int u_32_t;
-# define	U_32_T	1
+#ifndef RADIX_T
+typedef unsigned int radix_t;
+# define	RADIX_T	1
 #endif
 
 typedef struct ipf_rdx_mask {
 	struct ipf_rdx_mask	*next;
 	struct ipf_rdx_node	*node;
-	u_32_t			*mask;
+	radix_t			*mask;
 	int			maskbitcount;
 } ipf_rdx_mask_t;
 
@@ -25,12 +25,12 @@ typedef struct ipf_rdx_node {
 	struct ipf_rdx_node	*dupkey;
 	struct ipf_rdx_mask	*masks;
 	struct ipf_rdx_mask	*mymask;
-	u_32_t			*addrkey;
-	u_32_t			*maskkey;
-	u_32_t			*addroff;
-	u_32_t			*maskoff;
-	u_32_t			lastmask;
-	u_32_t			bitmask;
+	radix_t			*addrkey;
+	radix_t			*maskkey;
+	radix_t			*addroff;
+	radix_t			*maskoff;
+	radix_t			lastmask;
+	radix_t			bitmask;
 	int			offset;
 	int			index;
 	int			maskbitcount;

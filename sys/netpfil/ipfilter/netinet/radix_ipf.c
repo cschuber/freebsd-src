@@ -35,7 +35,7 @@ static void ipf_rx_attach_mask(ipf_rdx_node_t *, ipf_rdx_mask_t *);
 static int count_mask_bits(addrfamily_t *, u_32_t **);
 static void buildnodes(addrfamily_t *, addrfamily_t *,
 			    ipf_rdx_node_t n[2]);
-static ipf_rdx_node_t *ipf_rx_find_addr(ipf_rdx_node_t *, u_32_t *);
+static ipf_rdx_node_t *ipf_rx_find_addr(ipf_rdx_node_t *, addrfamily_t *);
 static ipf_rdx_node_t *ipf_rx_lookup(ipf_rdx_head_t *, addrfamily_t *,
 					  addrfamily_t *);
 static ipf_rdx_node_t *ipf_rx_match(ipf_rdx_head_t *, addrfamily_t *);
@@ -65,7 +65,7 @@ static ipf_rdx_node_t *ipf_rx_match(ipf_rdx_head_t *, addrfamily_t *);
 static int
 count_mask_bits(addrfamily_t *mask, u_32_t **lastp)
 {
-	u_32_t *mp = (u_32_t *)&mask->adf_addr;
+	radix_t *mp = (u_32_t *)&mask->adf_addr;
 	u_32_t m;
 	int count = 0;
 	int mlen;
@@ -145,7 +145,7 @@ buildnodes(addrfamily_t *addr, addrfamily_t *mask, ipf_rdx_node_t nodes[2])
 /* match for the address given by "addr".                                   */
 /* ------------------------------------------------------------------------ */
 static ipf_rdx_node_t *
-ipf_rx_find_addr(ipf_rdx_node_t *tree, u_32_t *addr)
+ipf_rx_find_addr(ipf_rdx_node_t *tree, addrfamily_t *addr)
 {
 	ipf_rdx_node_t *cur;
 
@@ -180,16 +180,16 @@ ipf_rx_match(ipf_rdx_head_t *head, addrfamily_t *addr)
 	ipf_rdx_node_t *prev;
 	ipf_rdx_node_t *node;
 	ipf_rdx_node_t *cur;
-	u_32_t *data;
-	u_32_t *mask;
-	u_32_t *key;
-	u_32_t *end;
+	radix_t *data;
+	radix_t *mask;
+	radix_t *key;
+	radix_t *end;
 	int len;
 	int i;
 
 	len = addr->adf_len;
 	end = (u_32_t *)((u_char *)addr + len);
-	node = ipf_rx_find_addr(head->root, (u_32_t *)addr);
+	node = ipf_rx_find_addr(head->root, addr);
 
 	/*
 	 * Search the dupkey list for a potential match.
@@ -247,10 +247,10 @@ ipf_rx_lookup(ipf_rdx_head_t *head, addrfamily_t *addr, addrfamily_t *mask)
 {
 	ipf_rdx_node_t *found;
 	ipf_rdx_node_t *node;
-	u_32_t *akey;
+	radix_t *akey;
 	int count;
 
-	found = ipf_rx_find_addr(head->root, (u_32_t *)addr);
+	found = ipf_rx_find_addr(head->root, addr);
 	if (found->root == 1)
 		return (NULL);
 
@@ -326,11 +326,11 @@ ipf_rx_insert(ipf_rdx_head_t *head, ipf_rdx_node_t nodes[2], int *dup)
 	ipf_rdx_mask_t *mask;
 	ipf_rdx_node_t *cur;
 	u_32_t nodemask;
-	u_32_t *addr;
-	u_32_t *data;
+	addrfaily_t *addr;
+	radix_t *data;
 	int nodebits;
-	u_32_t *key;
-	u_32_t *end;
+	radix_t *key;
+	radix_t *end;
 	u_32_t bits;
 	int nodekey;
 	int nodeoff;
@@ -577,7 +577,7 @@ ipf_rx_delete(ipf_rdx_head_t *head, addrfamily_t *addr, addrfamily_t *mask)
 	ipf_rdx_mask_t *m;
 	int count;
 
-	found = ipf_rx_find_addr(head->root, (u_32_t *)addr);
+	found = ipf_rx_find_addr(head->root, addr);
 	if (found == NULL)
 		return (NULL);
 	if (found->root == 1)
