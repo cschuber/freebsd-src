@@ -83,7 +83,7 @@ ipf_forgetifp(softc, ifp)
 	ipf_main_softc_t *softc;
 	void *ifp;
 {
-	register frentry_t *f;
+	frentry_t *f;
 
 	WRITE_ENTER(&softc->ipf_mutex);
 	for (f = softc->ipf_acct[0][softc->ipf_active]; (f != NULL);

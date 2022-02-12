@@ -715,8 +715,8 @@ ipf_p_rpcb_getuaddr(rpc_msg_t *rm, xdr_uaddr_t *xu, u_32_t **p)
 static u_int
 ipf_p_rpcb_atoi(char *ptr)
 {
-	register char *s = ptr, c;
-	register u_int i = 0;
+	char *s = ptr, c;
+	u_int i = 0;
 
 	while (((c = *s++) != '\0') && ISDIGIT(c)) {
 		i *= 10;

@@ -673,8 +673,8 @@ ipf_send_icmp_err(int type, fr_info_t *fin, int dst)
 int
 ipf_fastroute(mb_t *m0, mb_t **mpp, fr_info_t *fin, frdest_t *fdp)
 {
-	register struct ip *ip, *mhip;
-	register struct mbuf *m = *mpp;
+	struct ip *ip, *mhip;
+	struct mbuf *m = *mpp;
 	int len, off, error = 0, hlen, code;
 	struct ifnet *ifp, *sifp;
 	struct route ro;

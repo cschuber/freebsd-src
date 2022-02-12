@@ -122,8 +122,8 @@ ipf_p_rcmd_del(ipf_main_softc_t *softc, ap_session_t *aps)
 u_short
 ipf_rcmd_atoi(char *ptr)
 {
-	register char *s = ptr, c;
-	register u_short i = 0;
+	char *s = ptr, c;
+	u_short i = 0;
 
 	while (((c = *s++) != '\0') && ISDIGIT(c)) {
 		i *= 10;

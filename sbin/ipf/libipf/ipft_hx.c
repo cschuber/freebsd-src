@@ -60,7 +60,7 @@ hex_close(void)
 static int
 hex_readip(mb_t *mb, char **ifn, int *dir)
 {
-	register char *s, *t, *u;
+	char *s, *t, *u;
 	char	line[513];
 	ip_t	*ip;
 	char	*buf;
@@ -153,7 +153,7 @@ hex_readip(mb_t *mb, char **ifn, int *dir)
 
 
 static char
-*readhex(register char *src, register char *dst)
+*readhex(char *src, char *dst)
 {
 	int	state = 0;
 	char	c;

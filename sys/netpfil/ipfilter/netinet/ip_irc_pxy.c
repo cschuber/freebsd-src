@@ -67,8 +67,8 @@ const char *ipf_p_irc_dcctypes[] = {
 int
 ipf_p_irc_complete(ircinfo_t *ircp, char *buf, size_t len)
 {
-	register char *s, c;
-	register size_t i;
+	char *s, c;
+	size_t i;
 	u_32_t l;
 	int j, k;
 
@@ -345,7 +345,7 @@ ipf_p_irc_send(fr_info_t *fin, nat_t *nat)
 
 	if (inc != 0) {
 #if SOLARIS
-		register u_32_t	sum1, sum2;
+		u_32_t	sum1, sum2;
 
 		sum1 = fin->fin_plen;
 		sum2 = fin->fin_plen + inc;

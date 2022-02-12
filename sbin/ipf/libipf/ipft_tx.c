@@ -116,7 +116,7 @@ text_close(void)
 static int
 text_readip(mb_t *mb, char **ifn, int *dir)
 {
-	register char *s;
+	char *s;
 	char	line[513];
 	ip_t	*ip;
 	char	*buf;

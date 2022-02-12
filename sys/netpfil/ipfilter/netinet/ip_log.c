@@ -336,7 +336,7 @@ ipf_log_pkt(fr_info_t *fin, u_int flags)
 {
 	ipf_main_softc_t *softc = fin->fin_main_soft;
 	ipf_log_softc_t *softl = softc->ipf_log_soft;
-	register size_t hlen;
+	size_t hlen;
 	int types[2], mlen;
 	size_t sizes[2];
 	void *ptrs[2];

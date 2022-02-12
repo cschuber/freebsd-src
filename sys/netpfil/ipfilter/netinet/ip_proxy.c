@@ -801,7 +801,7 @@ ipf_proxy_new(fr_info_t *fin, nat_t *nat)
 {
 	ipf_main_softc_t *softc = fin->fin_main_soft;
 	ipf_proxy_softc_t *softp = softc->ipf_proxy_soft;
-	register ap_session_t *aps;
+	ap_session_t *aps;
 	aproxy_t *apr;
 
 	if (softp->ips_proxy_debug & 0x04)

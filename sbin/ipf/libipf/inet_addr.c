@@ -92,13 +92,13 @@ int inet_aton(const char *, struct in_addr *);
  * cannot distinguish between failure and a local broadcast address.
  */
 int
-inet_aton(register const char *cp, struct in_addr *addr)
+inet_aton(const char *cp, struct in_addr *addr)
 {
-	register u_long val;
-	register int base, n;
-	register char c;
+	u_long val;
+	int base, n;
+	char c;
 	u_int parts[4];
-	register u_int *pp = parts;
+	u_int *pp = parts;
 
 	c = *cp;
 	for (;;) {

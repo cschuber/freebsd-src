@@ -53,9 +53,9 @@ openkmem(char *kern, char *core)
 }
 
 int
-kmemcpy(register char *buf, long pos, register int n)
+kmemcpy(char *buf, long pos, int n)
 {
-	register int	r;
+	int	r;
 
 	if (!n)
 		return (0);
@@ -81,9 +81,9 @@ kmemcpy(register char *buf, long pos, register int n)
 }
 
 int
-kstrncpy(register char *buf, long pos, register int n)
+kstrncpy(char *buf, long pos, int n)
 {
-	register int	r;
+	int	r;
 
 	if (!n)
 		return (0);

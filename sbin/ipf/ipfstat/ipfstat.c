@@ -1980,8 +1980,8 @@ static char *ttl_to_string(long int ttl)
 static int sort_pkts(const void *a, const void *b)
 {
 
-	register const statetop_t *ap = a;
-	register const statetop_t *bp = b;
+	const statetop_t *ap = a;
+	const statetop_t *bp = b;
 
 	if (ap->st_pkts == bp->st_pkts)
 		return (0);
@@ -1993,8 +1993,8 @@ static int sort_pkts(const void *a, const void *b)
 
 static int sort_bytes(const void *a, const void *b)
 {
-	register const statetop_t *ap = a;
-	register const statetop_t *bp = b;
+	const statetop_t *ap = a;
+	const statetop_t *bp = b;
 
 	if (ap->st_bytes == bp->st_bytes)
 		return (0);
@@ -2006,8 +2006,8 @@ static int sort_bytes(const void *a, const void *b)
 
 static int sort_p(const void *a, const void *b)
 {
-	register const statetop_t *ap = a;
-	register const statetop_t *bp = b;
+	const statetop_t *ap = a;
+	const statetop_t *bp = b;
 
 	if (ap->st_p == bp->st_p)
 		return (0);
@@ -2019,8 +2019,8 @@ static int sort_p(const void *a, const void *b)
 
 static int sort_ttl(const void *a, const void *b)
 {
-	register const statetop_t *ap = a;
-	register const statetop_t *bp = b;
+	const statetop_t *ap = a;
+	const statetop_t *bp = b;
 
 	if (ap->st_age == bp->st_age)
 		return (0);
@@ -2031,8 +2031,8 @@ static int sort_ttl(const void *a, const void *b)
 
 static int sort_srcip(const void *a, const void *b)
 {
-	register const statetop_t *ap = a;
-	register const statetop_t *bp = b;
+	const statetop_t *ap = a;
+	const statetop_t *bp = b;
 
 #ifdef USE_INET6
 	if (use_inet6 && !use_inet4) {
@@ -2055,8 +2055,8 @@ static int sort_srcip(const void *a, const void *b)
 
 static int sort_srcpt(const void *a, const void *b)
 {
-	register const statetop_t *ap = a;
-	register const statetop_t *bp = b;
+	const statetop_t *ap = a;
+	const statetop_t *bp = b;
 
 	if (htons(ap->st_sport) == htons(bp->st_sport))
 		return (0);
@@ -2067,8 +2067,8 @@ static int sort_srcpt(const void *a, const void *b)
 
 static int sort_dstip(const void *a, const void *b)
 {
-	register const statetop_t *ap = a;
-	register const statetop_t *bp = b;
+	const statetop_t *ap = a;
+	const statetop_t *bp = b;
 
 #ifdef USE_INET6
 	if (use_inet6 && !use_inet4) {
@@ -2091,8 +2091,8 @@ static int sort_dstip(const void *a, const void *b)
 
 static int sort_dstpt(const void *a, const void *b)
 {
-	register const statetop_t *ap = a;
-	register const statetop_t *bp = b;
+	const statetop_t *ap = a;
+	const statetop_t *bp = b;
 
 	if (htons(ap->st_dport) == htons(bp->st_dport))
 		return (0);

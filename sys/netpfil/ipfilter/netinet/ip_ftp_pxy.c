@@ -1032,8 +1032,8 @@ int
 ipf_p_ftp_client_valid(ipf_ftp_softc_t *softf, ftpside_t *ftps, char *buf,
 	size_t len)
 {
-	register char *s, c, pc;
-	register size_t i = len;
+	char *s, c, pc;
+	size_t i = len;
 	char cmd[5];
 
 	s = buf;
@@ -1113,8 +1113,8 @@ int
 ipf_p_ftp_server_valid(ipf_ftp_softc_t *softf, ftpside_t *ftps, char *buf,
 	size_t len)
 {
-	register char *s, c, pc;
-	register size_t i = len;
+	char *s, c, pc;
+	size_t i = len;
 	int cmd;
 
 	s = buf;
@@ -1595,8 +1595,8 @@ ipf_p_ftp_in(void *arg, fr_info_t *fin, ap_session_t *aps, nat_t *nat)
 u_short
 ipf_p_ftp_atoi(char **ptr)
 {
-	register char *s = *ptr, c;
-	register u_char i = 0, j = 0;
+	char *s = *ptr, c;
+	u_char i = 0, j = 0;
 
 	while (((c = *s++) != '\0') && ISDIGIT(c)) {
 		i *= 10;

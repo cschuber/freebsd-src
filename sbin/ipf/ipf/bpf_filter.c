@@ -118,12 +118,12 @@ static int m_xhalf(mb_t *, int, int *);
 
 static int
 m_xword(m, k, err)
-	register mb_t *m;
-	register int k, *err;
+	mb_t *m;
+	int k, *err;
 {
-	register int len;
-	register u_char *cp, *np;
-	register mb_t *m0;
+	int len;
+	u_char *cp, *np;
+	mb_t *m0;
 
 	MINDEX(len, m, k);
 	cp = MTOD(m, u_char *) + k;
@@ -154,12 +154,12 @@ m_xword(m, k, err)
 
 static int
 m_xhalf(m, k, err)
-	register mb_t *m;
-	register int k, *err;
+	mb_t *m;
+	int k, *err;
 {
-	register int len;
-	register u_char *cp;
-	register mb_t *m0;
+	int len;
+	u_char *cp;
+	mb_t *m0;
 
 	MINDEX(len, m, k);
 	cp = MTOD(m, u_char *) + k;
@@ -186,13 +186,13 @@ m_xhalf(m, k, err)
  */
 u_int
 bpf_filter(pc, p, wirelen, buflen)
-	register struct bpf_insn *pc;
-	register u_char *p;
+	struct bpf_insn *pc;
+	u_char *p;
 	u_int wirelen;
-	register u_int buflen;
+	u_int buflen;
 {
-	register u_int32 A, X;
-	register int k;
+	u_int32 A, X;
+	int k;
 	int32 mem[BPF_MEMWORDS];
 	mb_t *m, *n;
 	int merr = 0;	/* XXX: GCC */

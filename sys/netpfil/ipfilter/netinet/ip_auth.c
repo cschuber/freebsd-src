@@ -499,7 +499,7 @@ ipf_auth_new(mb_t *m, fr_info_t *fin)
 	if ((ip == (ip_t *)m->b_rptr) && (fin->fin_v == 4))
 # endif
 	{
-		register u_short bo;
+		u_short bo;
 
 		bo = ip->ip_len;
 		ip->ip_len = htons(bo);
