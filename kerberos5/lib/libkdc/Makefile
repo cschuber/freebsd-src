@@ -5,7 +5,7 @@ PACKAGE=	kerberos
 LIB=	kdc
 LDFLAGS=	-Wl,--no-undefined
 VERSION_MAP= ${KRB5DIR}/kdc/version-script.map
-LIBADD=	roken hdb hx509 krb5 heimntlm asn1 crypto
+LIBADD=	roken hdb hx509 krb5 heimntlm asn1 crypto heimbase hcrypto
 
 INCS=	kdc.h \
 	kdc-protos.h
@@ -21,16 +21,20 @@ SRCS=	\
 	kerberos5.c \
 	krb5tgs.c \
 	pkinit.c \
+	pkinit-ec.c \
 	log.c \
 	misc.c \
 	kx509.c \
 	process.c \
-	windc.c
+	windc.c \
+	fast.c
 
 CFLAGS+=	-I${KRB5DIR}/lib/roken \
 		-I${KRB5DIR}/lib/krb5 \
 		-I${KRB5DIR}/lib/hdb \
 		-I${KRB5DIR}/kdc \
+		-I${KRB5DIR}/include \
+		-I${.OBJDIR:H}/libhdb \
 		-I${SRCTOP}/contrib/com_err
 
 .include <bsd.lib.mk>

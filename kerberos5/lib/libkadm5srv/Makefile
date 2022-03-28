@@ -4,7 +4,7 @@ PACKAGE=	kerberos
 
 LIB=	kadm5srv
 LDFLAGS=	-Wl,--no-undefined
-LIBADD=	com_err hdb krb5 roken
+LIBADD=	com_err hdb krb5 roken hcrypto hdb heimbase
 VERSION_MAP= ${KRB5DIR}/lib/kadm5/version-script.map
 MAN=	kadm5_pwcheck.3
 
@@ -35,10 +35,13 @@ SRCS=	acl.c \
 	rename_s.c \
 	server_glue.c \
 	set_keys.c \
-	set_modifier.c
+	set_modifier.c \
+	setkey3_s.c
 
 CFLAGS+=-I${KRB5DIR}/lib/kadm5 -I${KRB5DIR}/lib/asn1 -I${KRB5DIR}/lib/roken \
-	-I${SRCTOP}/contrib/com_err -I.
+	-I${KRB5DIR}/lib/krb5 -I${KRB5DIR}/include \
+	-I${SRCTOP}/contrib/com_err -I. \
+	-I${.OBJDIR:H}/libhdb
 
 .include <bsd.lib.mk>
 

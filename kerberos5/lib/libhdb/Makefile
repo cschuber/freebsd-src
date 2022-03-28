@@ -5,7 +5,7 @@ PACKAGE=	kerberos
 LIB=	hdb
 LDFLAGS=	-Wl,--no-undefined ${LDAPLDFLAGS}
 VERSION_MAP=	${KRB5DIR}/lib/hdb/version-script.map
-LIBADD=	asn1 com_err krb5 roken sqlite3
+LIBADD=	asn1 com_err krb5 roken sqlite3 hcrypto heimbase
 LDADD=	${LDAPLDADD}
 DPADD=	${LDAPDPADD}
 
@@ -38,7 +38,6 @@ MLINKS=	HDB.3 hdb__del.3 \
 
 INCS=	hdb-protos.h \
 	hdb.h \
-	hdb_asn1.h \
 	hdb_err.h
 
 SRCS=	common.c \
@@ -62,7 +61,7 @@ SRCS=	common.c \
 
 CFLAGS+=-I${KRB5DIR}/lib/hdb -I${KRB5DIR}/lib/asn1 \
 	-I${KRB5DIR}/lib/roken -I${SRCTOP}/contrib/sqlite3/ \
-	-I${KRB5DIR}/lib/krb5 \
+	-I${KRB5DIR}/lib/krb5  -I${KRB5DIR}/include \
 	-I${SRCTOP}/contrib/com_err \
 	-I. ${LDAPCFLAGS}
 CFLAGS+=-DHDB_DB_DIR="\"/var/heimdal\""
@@ -73,17 +72,19 @@ GEN=	asn1_Salt.x \
 	asn1_HDBFlags.x \
 	asn1_GENERATION.x \
 	asn1_HDB_Ext_PKINIT_acl.x \
-	asn1_HDB_Ext_PKINIT_cert.x \
 	asn1_HDB_Ext_PKINIT_hash.x \
+	asn1_HDB_Ext_PKINIT_cert.x \
 	asn1_HDB_Ext_Constrained_delegation_acl.x \
 	asn1_HDB_Ext_Lan_Manager_OWF.x \
 	asn1_HDB_Ext_Password.x \
 	asn1_HDB_Ext_Aliases.x \
+	asn1_Keys.x \
+	asn1_hdb_keyset.x \
+	asn1_HDB_Ext_KeySet.x \
 	asn1_HDB_extension.x \
 	asn1_HDB_extensions.x \
 	asn1_hdb_entry.x \
 	asn1_hdb_entry_alias.x \
-	asn1_hdb_keyset.x \
 	hdb_asn1.hx \
 	hdb_asn1-priv.hx
 
@@ -93,7 +94,7 @@ CLEANFILES=	${GEN} ${GEN:S/.x$/.c/:S/.hx$/.h/} hdb_asn1_files \
 .ORDER: ${GEN}
 ${GEN:[2..-1]}: .NOMETA
 ${GEN}: hdb.asn1
-	${ASN1_COMPILE} ${.ALLSRC:M*.asn1} hdb_asn1
+	${ASN1_COMPILE} --sequence=HDB-Ext-KeySet --sequence=Keys ${.ALLSRC:M*.asn1} hdb_asn1
 
 .SUFFIXES: .h .c .x .hx
 

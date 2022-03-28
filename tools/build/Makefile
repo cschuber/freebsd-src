@@ -342,6 +342,7 @@ INSTALLDIR_LIST= \
 	lib/casper \
 	lib/geom \
 	usr/include/casper \
+	usr/include/hcrypto \
 	usr/include/private/ucl \
 	usr/include/private/zstd \
 	usr/lib \

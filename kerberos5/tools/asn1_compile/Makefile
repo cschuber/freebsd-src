@@ -11,7 +11,7 @@ DPADD=	${LIBROKEN_A}
 MK_PIE:=	no
 
 SRCS=	\
-	asn1parse.y \
+	asn1parse.c \
 	gen.c \
 	gen_copy.c \
 	gen_decode.c \
@@ -22,7 +22,7 @@ SRCS=	\
 	gen_seq.c \
 	gen_template.c \
 	hash.c \
-	lex.l \
+	lex.c \
 	main.c \
 	roken.h \
 	symbol.c

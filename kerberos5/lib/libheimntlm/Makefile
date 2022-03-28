@@ -4,11 +4,11 @@ PACKAGE=	kerberos
 
 LIB=	heimntlm
 LDFLAGS=	-Wl,--no-undefined
-LIBADD=	crypto com_err krb5 roken
+LIBADD=	crypto hcrypto com_err krb5 roken wind
 SRCS=	ntlm.c ntlm_err.c ntlm_err.h
 INCS=	heimntlm.h heimntlm-protos.h ntlm_err.h
 CFLAGS+=-I${KRB5DIR}/lib/ntlm -I${KRB5DIR}/lib/roken \
-	-I${SRCTOP}/contrib/com_err
+	-I${KRB5DIR}/include -I${SRCTOP}/contrib/com_err
 VERSION_MAP= ${KRB5DIR}/lib/ntlm/version-script.map
 
 MAN=	ntlm_buf.3 \

@@ -1,6 +1,6 @@
 # $FreeBSD$
 
-SUBDIR=	lib .WAIT \
+SUBDIR=	lib \
 	libexec tools usr.bin usr.sbin
 SUBDIR_PARALLEL=
 

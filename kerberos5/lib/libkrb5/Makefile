@@ -5,7 +5,7 @@ PACKAGE=	kerberos
 LIB=	krb5
 LDFLAGS=	-Wl,--no-undefined
 VERSION_MAP= ${KRB5DIR}/lib/krb5/version-script.map
-LIBADD=	asn1 com_err crypt crypto hx509 roken wind heimbase heimipcc
+LIBADD=	asn1 com_err crypt crypto hcrypto hx509 roken wind heimbase heimipcc
 
 INCS=	heim_err.h \
 	heim_threads.h \
@@ -513,7 +513,8 @@ SRCS=	acache.c \
 	copy_host_realm.c \
 	crc.c \
 	creds.c \
-	crypto-aes.c \
+	crypto-aes-sha1.c \
+	crypto-aes-sha2.c \
 	crypto-algs.c \
 	crypto-arcfour.c \
 	crypto-des-common.c \
@@ -525,13 +526,17 @@ SRCS=	acache.c \
 	crypto-rand.c \
 	crypto.c \
 	data.c \
+	dcache.c \
+	db_plugin.c \
 	deprecated.c \
 	digest.c \
 	doxygen.c \
 	eai_to_heim_errno.c \
+	enomem.c \
 	error_string.c \
 	expand_hostname.c \
 	expand_path.c \
+	fast.c \
 	fcache.c \
 	free.c \
 	free_host_realm.c \
@@ -572,6 +577,7 @@ SRCS=	acache.c \
 	pac.c \
 	padata.c \
 	pcache.c \
+	pkinit-ec.c \
 	pkinit.c \
 	plugin.c \
 	principal.c \
@@ -586,7 +592,8 @@ SRCS=	acache.c \
 	read_message.c \
 	recvauth.c \
 	replay.c \
-	salt-aes.c \
+	salt-aes-sha1.c \
+	salt-aes-sha2.c \
 	salt-arcfour.c \
 	salt-des.c \
 	salt-des3.c \
@@ -596,11 +603,13 @@ SRCS=	acache.c \
 	sendauth.c \
 	set_default_realm.c \
 	sock_principal.c \
+	sp800-108-kdf.c \
 	store-int.c \
 	store.c \
 	store_emem.c \
 	store_fd.c \
 	store_mem.c \
+	store_sock.c \
 	ticket.c \
 	time.c \
 	transited.c \
@@ -624,6 +633,7 @@ CFLAGS+=	-I${KRB5DIR}/lib/krb5 \
 		-I${KRB5DIR}/lib/roken \
 		-I${KRB5DIR}/lib/ipc \
 		-I${KRB5DIR}/base \
+		-I${KRB5DIR}/include \
 		-I${SRCTOP}/contrib/com_err \
 		-I.
 

@@ -144,6 +144,7 @@ _LIBRARIES=	\
 		gpio \
 		gssapi \
 		gssapi_krb5 \
+		hcrypto \
 		hdb \
 		heimbase \
 		heimntlm \
@@ -367,21 +368,22 @@ _DP_pam+=	ssh
 .if ${MK_NIS} != "no"
 _DP_pam+=	ypclnt
 .endif
+_DP_hcrypto=	pthread asn1 com_err crypt crypto heimbase roken
 _DP_roken=	crypt
-_DP_kadm5clnt=	com_err krb5 roken
-_DP_kadm5srv=	com_err hdb krb5 roken
-_DP_heimntlm=	crypto com_err krb5 roken
-_DP_hx509=	asn1 com_err crypto roken wind
-_DP_hdb=	asn1 com_err krb5 roken sqlite3
+_DP_kadm5clnt=	com_err krb5 roken hcrypto hdb
+_DP_kadm5srv=	com_err hdb krb5 roken hcrypto hdb heimbase
+_DP_heimntlm=	crypto com_err krb5 roken hcrypto wind
+_DP_hx509=	asn1 com_err hcrypto crypto heimbase roken wind
+_DP_hdb=	asn1 com_err krb5 roken sqlite3 hcrypto heimbase
 _DP_asn1=	com_err roken
-_DP_kdc=	roken hdb hx509 krb5 heimntlm asn1 crypto
+_DP_kdc=	roken hdb hx509 krb5 heimntlm asn1 crypto heimbase hcrypto
 _DP_wind=	com_err roken
-_DP_heimbase=	pthread
+_DP_heimbase=	pthread roken
 _DP_heimipcc=	heimbase roken pthread
 _DP_heimipcs=	heimbase roken pthread
-_DP_kafs5=	asn1 krb5 roken
-_DP_krb5=	asn1 com_err crypt crypto hx509 roken wind heimbase heimipcc
-_DP_gssapi_krb5=	gssapi krb5 crypto roken asn1 com_err
+_DP_kafs5=	asn1 krb5 roken crypto hcrypto
+_DP_krb5=	asn1 com_err crypt crypto hcrypto hx509 roken wind heimbase heimipcc
+_DP_gssapi_krb5=	gssapi krb5 crypto hcrypto roken asn1 heimbase heimntlm com_err
 _DP_lzma=	md pthread
 _DP_ucl=	m
 _DP_vmmapi=	util
@@ -704,8 +706,7 @@ LIBSSPDIR=	${OBJTOP}/lib/libssp
 LIBSSP_NONSHAREDDIR=	${OBJTOP}/lib/libssp_nonshared
 LIBASN1DIR=	${OBJTOP}/kerberos5/lib/libasn1
 LIBGSSAPI_KRB5DIR=	${OBJTOP}/kerberos5/lib/libgssapi_krb5
-LIBGSSAPI_NTLMDIR=	${OBJTOP}/kerberos5/lib/libgssapi_ntlm
-LIBGSSAPI_SPNEGODIR=	${OBJTOP}/kerberos5/lib/libgssapi_spnego
+LIBHCRYPTODIR=	${OBJTOP}/kerberos5/lib/libhcrypto
 LIBHDBDIR=	${OBJTOP}/kerberos5/lib/libhdb
 LIBHEIMBASEDIR=	${OBJTOP}/kerberos5/lib/libheimbase
 LIBHEIMIPCCDIR=	${OBJTOP}/kerberos5/lib/libheimipcc

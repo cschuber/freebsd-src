@@ -1,9 +1,9 @@
 /* ./combining_table.c */
-/* Automatically generated at 2012-01-11T14:07:00.838826 */
+/* Automatically generated at 2019-06-07T02:26:41.530824 */
 
 
-#include <stdlib.h>
 #include "combining_table.h"
+#include <stdlib.h>
 
 const struct translation _wind_combining_table[] = {
 {0x300, 230}, /* Mn */
