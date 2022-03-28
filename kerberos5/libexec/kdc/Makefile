@@ -11,8 +11,11 @@ SRCS=	config.c \
 	main.c
 
 CFLAGS+=-I${KRB5DIR}/lib/krb5 -I${KRB5DIR}/lib/asn1 -I${KRB5DIR}/lib/roken \
-	-I${KRB5DIR}/kdc -I${SRCTOP}/contrib/com_err ${LDAPCFLAGS}
-LIBADD=	kdc hdb krb5 roken crypt vers
+	-I${KRB5DIR}/lib/gssapi \
+	-I${KRB5DIR}/kdc -I${KRB5DIR}/include \
+	-I${.OBJDIR:H:H}/lib/libhdb \
+	-I${SRCTOP}/contrib/com_err ${LDAPCFLAGS}
+LIBADD=	kdc hdb hcrypto krb5 roken gssapi_krb5 crypt vers
 LDFLAGS=${LDAPLDFLAGS}
 
 .include <bsd.prog.mk>

@@ -10,6 +10,7 @@ DIRDEPS.KERBEROS_SUPPORT.yes+= \
 	kerberos5/lib/libasn1 \
 	kerberos5/lib/libheimbase \
 	kerberos5/lib/libheimipcc \
+	kerberos5/lib/libhcrypto \
 	kerberos5/lib/libhx509 \
 	kerberos5/lib/libkrb5 \
 	kerberos5/lib/libroken \

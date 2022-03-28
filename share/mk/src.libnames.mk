@@ -145,6 +145,7 @@ _LIBRARIES=	\
 		gpio \
 		gssapi \
 		gssapi_krb5 \
+		hcrypto \
 		hdb \
 		heimbase \
 		heimntlm \
@@ -366,21 +367,22 @@ _DP_pam+=	ssh
 .if ${MK_NIS} != "no"
 _DP_pam+=	ypclnt
 .endif
+_DP_hcrypto=	pthread asn1 com_err crypt crypto heimbase roken
 _DP_roken=	crypt
-_DP_kadm5clnt=	com_err krb5 roken
-_DP_kadm5srv=	com_err hdb krb5 roken
-_DP_heimntlm=	crypto com_err krb5 roken
-_DP_hx509=	asn1 com_err crypto roken wind
-_DP_hdb=	asn1 com_err krb5 roken sqlite3
+_DP_kadm5clnt=	com_err krb5 roken hcrypto hdb
+_DP_kadm5srv=	com_err hdb krb5 roken hcrypto hdb heimbase
+_DP_heimntlm=	crypto com_err krb5 roken hcrypto wind
+_DP_hx509=	asn1 com_err hcrypto crypto heimbase roken wind
+_DP_hdb=	asn1 com_err krb5 roken sqlite3 hcrypto heimbase
 _DP_asn1=	com_err roken
-_DP_kdc=	roken hdb hx509 krb5 heimntlm asn1 crypto
+_DP_kdc=	roken hdb hx509 krb5 heimntlm asn1 crypto heimbase hcrypto
 _DP_wind=	com_err roken
-_DP_heimbase=	pthread
+_DP_heimbase=	pthread roken
 _DP_heimipcc=	heimbase roken pthread
 _DP_heimipcs=	heimbase roken pthread
-_DP_kafs5=	asn1 krb5 roken
-_DP_krb5=	asn1 com_err crypt crypto hx509 roken wind heimbase heimipcc
-_DP_gssapi_krb5=	gssapi krb5 crypto roken asn1 com_err
+_DP_kafs5=	asn1 krb5 roken crypto hcrypto
+_DP_krb5=	asn1 com_err crypt crypto hcrypto hx509 roken wind heimbase heimipcc
+_DP_gssapi_krb5=	gssapi krb5 crypto hcrypto roken asn1 heimbase heimntlm com_err
 _DP_lzma=	md pthread
 _DP_ucl=	m
 _DP_vmmapi=	util
@@ -703,8 +705,7 @@ LIBSSPDIR=	${_LIB_OBJTOP}/lib/libssp
 LIBSSP_NONSHAREDDIR=	${_LIB_OBJTOP}/lib/libssp_nonshared
 LIBASN1DIR=	${_LIB_OBJTOP}/kerberos5/lib/libasn1
 LIBGSSAPI_KRB5DIR=	${_LIB_OBJTOP}/kerberos5/lib/libgssapi_krb5
-LIBGSSAPI_NTLMDIR=	${_LIB_OBJTOP}/kerberos5/lib/libgssapi_ntlm
-LIBGSSAPI_SPNEGODIR=	${_LIB_OBJTOP}/kerberos5/lib/libgssapi_spnego
+LIBHCRYPTODIR=	${_LIB_OBJTOP}/kerberos5/lib/libhcrypto
 LIBHDBDIR=	${_LIB_OBJTOP}/kerberos5/lib/libhdb
 LIBHEIMBASEDIR=	${_LIB_OBJTOP}/kerberos5/lib/libheimbase
 LIBHEIMIPCCDIR=	${_LIB_OBJTOP}/kerberos5/lib/libheimipcc
@@ -718,6 +719,7 @@ LIBKDCDIR=	${_LIB_OBJTOP}/kerberos5/lib/libkdc
 LIBKRB5DIR=	${_LIB_OBJTOP}/kerberos5/lib/libkrb5
 LIBROKENDIR=	${_LIB_OBJTOP}/kerberos5/lib/libroken
 LIBWINDDIR=	${_LIB_OBJTOP}/kerberos5/lib/libwind
+LIBVERSDIR=	${_LIB_OBJTOP}/kerberos5/lib/libvers
 LIBATF_CDIR=	${_LIB_OBJTOP}/lib/atf/libatf-c
 LIBATF_CXXDIR=	${_LIB_OBJTOP}/lib/atf/libatf-c++
 LIBGMOCKDIR=	${_LIB_OBJTOP}/lib/googletest/gmock
@@ -760,7 +762,7 @@ LIBTERMCAPWDIR=	${LIBTINFOWDIR}
 
 # Default other library directories to lib/libNAME.
 .for lib in ${_LIBRARIES}
-LIB${lib:tu}DIR?=	${OBJTOP}/lib/lib${lib}
+LIB${lib:tu}DIR?=	${_LIB_OBJTOP}/lib/lib${lib}
 .endfor
 
 # Validate that listed LIBADD are valid.
@@ -779,10 +781,10 @@ _BADLIBADD+= ${_l}
     (!defined(_DP_${LIB}) || ${LIBADD:O:u} != ${_DP_${LIB}:O:u})
 .error ${.CURDIR}: Missing or incorrect _DP_${LIB} entry in ${_this:T}.  Should match LIBADD for ${LIB} ('${LIBADD}' vs '${_DP_${LIB}}')
 .endif
-# Note that OBJTOP is not yet defined here but for the purpose of the check
+# Note that _LIB_OBJTOP is not yet defined here but for the purpose of the check
 # it is fine as it resolves to the SRC directory.
-.if !defined(LIB${LIB:tu}DIR) || !exists(${SRCTOP}/${LIB${LIB:tu}DIR:S,^${OBJTOP}/,,})
-.error ${.CURDIR}: Missing or incorrect value for LIB${LIB:tu}DIR in ${_this:T}: ${LIB${LIB:tu}DIR:S,^${OBJTOP}/,,}
+.if !defined(LIB${LIB:tu}DIR) || !exists(${SRCTOP}/${LIB${LIB:tu}DIR:S,^${_LIB_OBJTOP}/,,})
+.error ${.CURDIR}: Missing or incorrect value for LIB${LIB:tu}DIR in ${_this:T}: ${LIB${LIB:tu}DIR:S,^${_LIB_OBJTOP}/,,}
 .endif
 .if ${_INTERNALLIBS:M${LIB}} != "" && !defined(LIB${LIB:tu})
 .error ${.CURDIR}: Missing value for LIB${LIB:tu} in ${_this:T}.  Likely should be: LIB${LIB:tu}?= $${LIB${LIB:tu}DIR}/lib${LIB}.a

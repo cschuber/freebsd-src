@@ -8,9 +8,10 @@ CFLAGS+=	-I${KRB5DIR}/lib/hx509 \
 		-I${KRB5DIR}/lib/asn1 \
 		-I${KRB5DIR}/lib/roken \
 		-I${KRB5DIR}/lib/sl \
+		-I${KRB5DIR}/include \
 		-I${SRCTOP}/contrib/com_err \
 		-I.
-LIBADD=	hx509 roken asn1 crypto sl vers edit
+LIBADD=	hx509 roken asn1 hcrypto crypto sl vers edit
 SRCS=	hxtool.c hxtool-commands.c hxtool-commands.h
 
 CLEANFILES=	hxtool-commands.h hxtool-commands.c
