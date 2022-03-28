@@ -145,6 +145,7 @@ _LIBRARIES=	\
 		gpio \
 		gssapi \
 		gssapi_krb5 \
+		hcrypto \
 		hdb \
 		heimbase \
 		heimntlm \
@@ -366,21 +367,22 @@ _DP_pam+=	ssh
 .if ${MK_NIS} != "no"
 _DP_pam+=	ypclnt
 .endif
+_DP_hcrypto=	pthread asn1 com_err crypt crypto heimbase roken
 _DP_roken=	crypt
-_DP_kadm5clnt=	com_err krb5 roken
-_DP_kadm5srv=	com_err hdb krb5 roken
-_DP_heimntlm=	crypto com_err krb5 roken
-_DP_hx509=	asn1 com_err crypto roken wind
-_DP_hdb=	asn1 com_err krb5 roken sqlite3
+_DP_kadm5clnt=	com_err krb5 roken hcrypto hdb
+_DP_kadm5srv=	com_err hdb krb5 roken hcrypto hdb heimbase
+_DP_heimntlm=	crypto com_err krb5 roken hcrypto wind
+_DP_hx509=	asn1 com_err hcrypto crypto heimbase roken wind
+_DP_hdb=	asn1 com_err krb5 roken sqlite3 hcrypto heimbase
 _DP_asn1=	com_err roken
-_DP_kdc=	roken hdb hx509 krb5 heimntlm asn1 crypto
+_DP_kdc=	roken hdb hx509 krb5 heimntlm asn1 crypto heimbase hcrypto
 _DP_wind=	com_err roken
-_DP_heimbase=	pthread
+_DP_heimbase=	pthread roken
 _DP_heimipcc=	heimbase roken pthread
 _DP_heimipcs=	heimbase roken pthread
-_DP_kafs5=	asn1 krb5 roken
-_DP_krb5=	asn1 com_err crypt crypto hx509 roken wind heimbase heimipcc
-_DP_gssapi_krb5=	gssapi krb5 crypto roken asn1 com_err
+_DP_kafs5=	asn1 krb5 roken crypto hcrypto
+_DP_krb5=	asn1 com_err crypt crypto hcrypto hx509 roken wind heimbase heimipcc
+_DP_gssapi_krb5=	gssapi krb5 crypto hcrypto roken asn1 heimbase heimntlm com_err
 _DP_lzma=	md pthread
 _DP_ucl=	m
 _DP_vmmapi=	util
@@ -527,134 +529,134 @@ DPADD+=		${DPADD_${_l}}
 LDADD+=		${LDADD_${_l}}
 .endfor
 
-_LIB_OBJTOP?=	${OBJTOP}
+_LIB__LIB_OBJTOP?=	${_LIB_OBJTOP}
 # INTERNALLIB definitions.
-LIBELFTCDIR=	${_LIB_OBJTOP}/lib/libelftc
+LIBELFTCDIR=	${_LIB__LIB_OBJTOP}/lib/libelftc
 LIBELFTC?=	${LIBELFTCDIR}/libelftc${PIE_SUFFIX}.a
 
-LIBLUADIR=	${_LIB_OBJTOP}/lib/liblua
+LIBLUADIR=	${_LIB__LIB_OBJTOP}/lib/liblua
 LIBLUA?=	${LIBLUADIR}/liblua${PIE_SUFFIX}.a
 
-LIBLUTOKDIR=	${_LIB_OBJTOP}/lib/liblutok
+LIBLUTOKDIR=	${_LIB__LIB_OBJTOP}/lib/liblutok
 LIBLUTOK?=	${LIBLUTOKDIR}/liblutok${PIE_SUFFIX}.a
 
-LIBPEDIR=	${_LIB_OBJTOP}/lib/libpe
+LIBPEDIR=	${_LIB__LIB_OBJTOP}/lib/libpe
 LIBPE?=		${LIBPEDIR}/libpe${PIE_SUFFIX}.a
 
-LIBOPENBSDDIR=	${_LIB_OBJTOP}/lib/libopenbsd
+LIBOPENBSDDIR=	${_LIB__LIB_OBJTOP}/lib/libopenbsd
 LIBOPENBSD?=	${LIBOPENBSDDIR}/libopenbsd${PIE_SUFFIX}.a
 
-LIBSMDIR=	${_LIB_OBJTOP}/lib/libsm
+LIBSMDIR=	${_LIB__LIB_OBJTOP}/lib/libsm
 LIBSM?=		${LIBSMDIR}/libsm${PIE_SUFFIX}.a
 
-LIBSMDBDIR=	${_LIB_OBJTOP}/lib/libsmdb
+LIBSMDBDIR=	${_LIB__LIB_OBJTOP}/lib/libsmdb
 LIBSMDB?=	${LIBSMDBDIR}/libsmdb${PIE_SUFFIX}.a
 
-LIBSMUTILDIR=	${_LIB_OBJTOP}/lib/libsmutil
+LIBSMUTILDIR=	${_LIB__LIB_OBJTOP}/lib/libsmutil
 LIBSMUTIL?=	${LIBSMUTILDIR}/libsmutil${PIE_SUFFIX}.a
 
-LIBNETBSDDIR?=	${_LIB_OBJTOP}/lib/libnetbsd
+LIBNETBSDDIR?=	${_LIB__LIB_OBJTOP}/lib/libnetbsd
 LIBNETBSD?=	${LIBNETBSDDIR}/libnetbsd${PIE_SUFFIX}.a
 
-LIBVERSDIR?=	${_LIB_OBJTOP}/kerberos5/lib/libvers
+LIBVERSDIR?=	${_LIB__LIB_OBJTOP}/kerberos5/lib/libvers
 LIBVERS?=	${LIBVERSDIR}/libvers${PIE_SUFFIX}.a
 
-LIBSLDIR=	${_LIB_OBJTOP}/kerberos5/lib/libsl
+LIBSLDIR=	${_LIB__LIB_OBJTOP}/kerberos5/lib/libsl
 LIBSL?=		${LIBSLDIR}/libsl${PIE_SUFFIX}.a
 
-LIBIFCONFIGDIR=	${_LIB_OBJTOP}/lib/libifconfig
+LIBIFCONFIGDIR=	${_LIB__LIB_OBJTOP}/lib/libifconfig
 LIBIFCONFIG?=	${LIBIFCONFIGDIR}/libifconfig${PIE_SUFFIX}.a
 
-LIBIPFDIR=	${_LIB_OBJTOP}/sbin/ipf/libipf
+LIBIPFDIR=	${_LIB__LIB_OBJTOP}/sbin/ipf/libipf
 LIBIPF?=	${LIBIPFDIR}/libipf${PIE_SUFFIX}.a
 
-LIBNVDIR=	${_LIB_OBJTOP}/lib/libnv
+LIBNVDIR=	${_LIB__LIB_OBJTOP}/lib/libnv
 LIBNV?=		${LIBNVDIR}/libnv${PIE_SUFFIX}.a
 
-LIBISCSIUTILDIR=	${_LIB_OBJTOP}/lib/libiscsiutil
+LIBISCSIUTILDIR=	${_LIB__LIB_OBJTOP}/lib/libiscsiutil
 LIBISCSIUTIL?=	${LIBISCSIUTILDIR}/libiscsiutil${PIE_SUFFIX}.a
 
-LIBTELNETDIR=	${_LIB_OBJTOP}/lib/libtelnet
+LIBTELNETDIR=	${_LIB__LIB_OBJTOP}/lib/libtelnet
 LIBTELNET?=	${LIBTELNETDIR}/libtelnet${PIE_SUFFIX}.a
 
-LIBCRONDIR=	${_LIB_OBJTOP}/usr.sbin/cron/lib
+LIBCRONDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/cron/lib
 LIBCRON?=	${LIBCRONDIR}/libcron${PIE_SUFFIX}.a
 
-LIBNTPDIR=	${_LIB_OBJTOP}/usr.sbin/ntp/libntp
+LIBNTPDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/ntp/libntp
 LIBNTP?=	${LIBNTPDIR}/libntp${PIE_SUFFIX}.a
 
-LIBNTPEVENTDIR=	${_LIB_OBJTOP}/usr.sbin/ntp/libntpevent
+LIBNTPEVENTDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/ntp/libntpevent
 LIBNTPEVENT?=	${LIBNTPEVENTDIR}/libntpevent${PIE_SUFFIX}.a
 
-LIBOPTSDIR=	${_LIB_OBJTOP}/usr.sbin/ntp/libopts
+LIBOPTSDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/ntp/libopts
 LIBOPTS?=	${LIBOPTSDIR}/libopts${PIE_SUFFIX}.a
 
-LIBPARSEDIR=	${_LIB_OBJTOP}/usr.sbin/ntp/libparse
+LIBPARSEDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/ntp/libparse
 LIBPARSE?=	${LIBPARSEDIR}/libparse${PIE_SUFFIX}.a
 
-LIBPFCTL=	${_LIB_OBJTOP}/lib/libpfctl
+LIBPFCTL=	${_LIB__LIB_OBJTOP}/lib/libpfctl
 LIBPFCTL?=	${LIBPFCTLDIR}/libpfctl${PIE_SUFFIX}.a
 
-LIBLPRDIR=	${_LIB_OBJTOP}/usr.sbin/lpr/common_source
+LIBLPRDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/lpr/common_source
 LIBLPR?=	${LIBLPRDIR}/liblpr${PIE_SUFFIX}.a
 
-LIBFIFOLOGDIR=	${_LIB_OBJTOP}/usr.sbin/fifolog/lib
+LIBFIFOLOGDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/fifolog/lib
 LIBFIFOLOG?=	${LIBFIFOLOGDIR}/libfifolog${PIE_SUFFIX}.a
 
-LIBBSNMPTOOLSDIR=	${_LIB_OBJTOP}/usr.sbin/bsnmpd/tools/libbsnmptools
+LIBBSNMPTOOLSDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/bsnmpd/tools/libbsnmptools
 LIBBSNMPTOOLS?=	${LIBBSNMPTOOLSDIR}/libbsnmptools${PIE_SUFFIX}.a
 
 LIBBE?=		${LIBBEDIR}/libbe${PIE_SUFFIX}.a
 
-LIBPMCSTATDIR=	${_LIB_OBJTOP}/lib/libpmcstat
+LIBPMCSTATDIR=	${_LIB__LIB_OBJTOP}/lib/libpmcstat
 LIBPMCSTAT?=	${LIBPMCSTATDIR}/libpmcstat${PIE_SUFFIX}.a
 
-LIBWPAAPDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/ap
+LIBWPAAPDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/ap
 LIBWPAAP?=	${LIBWPAAPDIR}/libwpaap${PIE_SUFFIX}.a
 
-LIBWPACOMMONDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/common
+LIBWPACOMMONDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/common
 LIBWPACOMMON?=	${LIBWPACOMMONDIR}/libwpacommon${PIE_SUFFIX}.a
 
-LIBWPACRYPTODIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/crypto
+LIBWPACRYPTODIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/crypto
 LIBWPACRYPTO?=	${LIBWPACRYPTODIR}/libwpacrypto${PIE_SUFFIX}.a
 
-LIBWPADRIVERSDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/drivers
+LIBWPADRIVERSDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/drivers
 LIBWPADRIVERS?=	${LIBWPADRIVERSDIR}/libwpadrivers${PIE_SUFFIX}.a
 
-LIBWPAEAP_COMMONDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/eap_common
+LIBWPAEAP_COMMONDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/eap_common
 LIBWPAEAP_COMMON?=	${LIBWPAEAP_COMMONDIR}/libwpaeap_common${PIE_SUFFIX}.a
 
-LIBWPAEAP_PEERDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/eap_peer
+LIBWPAEAP_PEERDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/eap_peer
 LIBWPAEAP_PEER?=	${LIBWPAEAP_PEERDIR}/libwpaeap_peer${PIE_SUFFIX}.a
 
-LIBWPAEAP_SERVERDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/eap_server
+LIBWPAEAP_SERVERDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/eap_server
 LIBWPAEAP_SERVER?=	${LIBWPAEAP_SERVERDIR}/libwpaeap_server${PIE_SUFFIX}.a
 
-LIBWPAEAPOL_AUTHDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/eapol_auth
+LIBWPAEAPOL_AUTHDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/eapol_auth
 LIBWPAEAPOL_AUTH?=	${LIBWPAEAPOL_AUTHDIR}/libwpaeapol_auth${PIE_SUFFIX}.a
 
-LIBWPAEAPOL_SUPPDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/eapol_supp
+LIBWPAEAPOL_SUPPDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/eapol_supp
 LIBWPAEAPOL_SUPP?=	${LIBWPAEAPOL_SUPPDIR}/libwpaeapol_supp${PIE_SUFFIX}.a
 
-LIBWPAL2_PACKETDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/l2_packet
+LIBWPAL2_PACKETDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/l2_packet
 LIBWPAL2_PACKET?=	${LIBWPAL2_PACKETDIR}/libwpal2_packet${PIE_SUFFIX}.a
 
-LIBWPARADIUSDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/radius
+LIBWPARADIUSDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/radius
 LIBWPARADIUS?=	${LIBWPARADIUSDIR}/libwparadius${PIE_SUFFIX}.a
 
-LIBWPARSN_SUPPDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/rsn_supp
+LIBWPARSN_SUPPDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/rsn_supp
 LIBWPARSN_SUPP?=	${LIBWPARSN_SUPPDIR}/libwparsn_supp${PIE_SUFFIX}.a
 
-LIBWPATLSDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/tls
+LIBWPATLSDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/tls
 LIBWPATLS?=	${LIBWPATLSDIR}/libwpatls${PIE_SUFFIX}.a
 
-LIBWPAUTILSDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/utils
+LIBWPAUTILSDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/utils
 LIBWPAUTILS?=	${LIBWPAUTILSDIR}/libwpautils${PIE_SUFFIX}.a
 
-LIBWPAWPSDIR=	${_LIB_OBJTOP}/usr.sbin/wpa/src/wps
+LIBWPAWPSDIR=	${_LIB__LIB_OBJTOP}/usr.sbin/wpa/src/wps
 LIBWPAWPS?=	${LIBWPAWPSDIR}/libwpawps${PIE_SUFFIX}.a
 
-LIBC_NOSSP_PICDIR=	${_LIB_OBJTOP}/lib/libc
+LIBC_NOSSP_PICDIR=	${_LIB__LIB_OBJTOP}/lib/libc
 LIBC_NOSSP_PIC?=	${LIBC_NOSSP_PICDIR}/libc_nossp_pic.a
 
 # Define a directory for each library.  This is useful for adding -L in when
@@ -703,8 +705,7 @@ LIBSSPDIR=	${_LIB_OBJTOP}/lib/libssp
 LIBSSP_NONSHAREDDIR=	${_LIB_OBJTOP}/lib/libssp_nonshared
 LIBASN1DIR=	${_LIB_OBJTOP}/kerberos5/lib/libasn1
 LIBGSSAPI_KRB5DIR=	${_LIB_OBJTOP}/kerberos5/lib/libgssapi_krb5
-LIBGSSAPI_NTLMDIR=	${_LIB_OBJTOP}/kerberos5/lib/libgssapi_ntlm
-LIBGSSAPI_SPNEGODIR=	${_LIB_OBJTOP}/kerberos5/lib/libgssapi_spnego
+LIBHCRYPTODIR=	${_LIB_OBJTOP}/kerberos5/lib/libhcrypto
 LIBHDBDIR=	${_LIB_OBJTOP}/kerberos5/lib/libhdb
 LIBHEIMBASEDIR=	${_LIB_OBJTOP}/kerberos5/lib/libheimbase
 LIBHEIMIPCCDIR=	${_LIB_OBJTOP}/kerberos5/lib/libheimipcc
@@ -758,7 +759,7 @@ LIBTERMCAPWDIR=	${LIBTINFOWDIR}
 
 # Default other library directories to lib/libNAME.
 .for lib in ${_LIBRARIES}
-LIB${lib:tu}DIR?=	${OBJTOP}/lib/lib${lib}
+LIB${lib:tu}DIR?=	${_LIB_OBJTOP}/lib/lib${lib}
 .endfor
 
 # Validate that listed LIBADD are valid.
@@ -777,10 +778,10 @@ _BADLIBADD+= ${_l}
     (!defined(_DP_${LIB}) || ${LIBADD:O:u} != ${_DP_${LIB}:O:u})
 .error ${.CURDIR}: Missing or incorrect _DP_${LIB} entry in ${_this:T}.  Should match LIBADD for ${LIB} ('${LIBADD}' vs '${_DP_${LIB}}')
 .endif
-# Note that OBJTOP is not yet defined here but for the purpose of the check
+# Note that _LIB_OBJTOP is not yet defined here but for the purpose of the check
 # it is fine as it resolves to the SRC directory.
-.if !defined(LIB${LIB:tu}DIR) || !exists(${SRCTOP}/${LIB${LIB:tu}DIR:S,^${OBJTOP}/,,})
-.error ${.CURDIR}: Missing or incorrect value for LIB${LIB:tu}DIR in ${_this:T}: ${LIB${LIB:tu}DIR:S,^${OBJTOP}/,,}
+.if !defined(LIB${LIB:tu}DIR) || !exists(${SRCTOP}/${LIB${LIB:tu}DIR:S,^${_LIB_OBJTOP}/,,})
+.error ${.CURDIR}: Missing or incorrect value for LIB${LIB:tu}DIR in ${_this:T}: ${LIB${LIB:tu}DIR:S,^${_LIB_OBJTOP}/,,}
 .endif
 .if ${_INTERNALLIBS:M${LIB}} != "" && !defined(LIB${LIB:tu})
 .error ${.CURDIR}: Missing value for LIB${LIB:tu} in ${_this:T}.  Likely should be: LIB${LIB:tu}?= $${LIB${LIB:tu}DIR}/lib${LIB}.a

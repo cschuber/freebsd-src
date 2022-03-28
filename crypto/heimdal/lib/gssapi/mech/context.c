@@ -153,6 +153,8 @@ _gss_mg_error(gssapi_mech_interface m, OM_uint32 maj, OM_uint32 min)
     }
 }
 
+
+#if 0
 void
 gss_mg_collect_error(gss_OID mech, OM_uint32 maj, OM_uint32 min)
 {
@@ -161,3 +163,4 @@ gss_mg_collect_error(gss_OID mech, OM_uint32 maj, OM_uint32 min)
 	return;
     _gss_mg_error(m, maj, min);
 }
+#endif

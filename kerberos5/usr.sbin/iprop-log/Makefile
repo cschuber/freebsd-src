@@ -8,6 +8,8 @@ SRCS=	iprop-log.c iprop-commands.c iprop-commands.h kadm5_err.h
 CFLAGS+=	-I${KRB5DIR}/lib/kadm5 \
 		-I${KRB5DIR}/lib/krb5 \
 		-I${KRB5DIR}/lib/roken \
+		-I${KRB5DIR}/lib/hdb \
+		-I${.OBJDIR:H:H}/lib/libhdb \
 		-I${KRB5DIR}/lib/sl \
 		-I.
 LIBADD=	kadm5srv hdb krb5 roken edit sl vers

@@ -20,10 +20,11 @@ SRCS=	acl.c \
 	renew.c
 
 CFLAGS+=-I${KRB5DIR}/lib/krb5 -I${KRB5DIR}/lib/asn1 -I${KRB5DIR}/lib/roken \
-	-I${KRB5DIR}/kcm -I${KRB5DIR}/lib/ipc ${LDAPCFLAGS}
+	-I${KRB5DIR}/kcm -I${KRB5DIR}/lib/ipc -I${KRB5DIR}/include \
+	${LDAPCFLAGS}
 # Avoid errors for using deprecated krb5_* APIs
 CFLAGS+="-DKRB5_DEPRECATED_FUNCTION(X)="
-LIBADD=	krb5 roken heimntlm heimipcs crypto
+LIBADD=	krb5 roken heimntlm heimipcs hcrypto crypto
 DPADD=	${LDAPDPADD}
 LDADD=	${LIBVERS} ${LDAPLDADD}
 LDFLAGS=${LDAPLDFLAGS}
