@@ -4,7 +4,7 @@ PACKAGE=	kerberos
 
 LIB=	kadm5clnt
 LDFLAGS=	-Wl,--no-undefined
-LIBADD=	com_err krb5 roken
+LIBADD=	com_err krb5 roken hcrypto hdb
 
 INCS=	admin.h \
 	kadm5-private.h \
@@ -37,7 +37,8 @@ SRCS=	ad.c \
 	send_recv.c
 
 CFLAGS+=-I${KRB5DIR}/lib/kadm5 -I${KRB5DIR}/lib/asn1 -I${KRB5DIR}/lib/roken \
-	-I${SRCTOP}/contrib/com_err -I.
+	-I${SRCTOP}/contrib/com_err -I. \
+	-I${.OBJDIR:H}/libhdb
 
 .include <bsd.lib.mk>
 

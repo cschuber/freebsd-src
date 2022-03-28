@@ -52,6 +52,17 @@
 #   xargs -n1 | sort | uniq -d;
 # done
 
+# 2022XXXX: Heimdal 7.7.0 upgrade
+OLD_FILES+=usr/lib/libgssapi_krb5.so.10
+OLD_FILES+=usr/lib/libgssapi_ntlm.a
+OLD_FILES+=usr/lib/libgssapi_ntlm.so
+OLD_FILES+=usr/lib/libgssapi_ntlm.so.10
+OLD_FILES+=usr/lib/libgssapi_spnego.a
+OLD_FILES+=usr/lib/libgssapi_spnego.so
+OLD_FILES+=usr/lib/libgssapi_spnego.so.10
+OLD_FILES+=usr/share/man/man8/kadmin.8.gz
+OLD_FILES+=usr/share/man/man8/ktutil.8.gz
+
 # 20220524: libkqueue test updates
 OLD_FILES+=usr/tests/sys/kqueue/libkqueue/kqtest
 

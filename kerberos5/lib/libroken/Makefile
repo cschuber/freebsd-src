@@ -19,6 +19,7 @@ INCS=	roken.h \
 
 SRCS=	base64.c \
 	copyhostent.c \
+	detach.c \
 	ecalloc.c \
 	emalloc.c \
 	erealloc.c \

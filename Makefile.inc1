@@ -2358,7 +2358,11 @@ ${_bt}-usr.bin/mkcsmapper: ${_bt}-usr.bin/yacc ${_bt_lex_depend}
 .if ${MK_KERBEROS} != "no"
 _kerberos5_bootstrap_tools= \
 	kerberos5/tools/make-roken \
+	lib/libcom_err \
 	kerberos5/lib/libroken \
+	kerberos5/lib/libasn1 \
+	kerberos5/lib/libwind \
+	kerberos5/lib/libhcrypto \
 	kerberos5/lib/libvers \
 	kerberos5/tools/asn1_compile \
 	kerberos5/tools/slc \
@@ -2457,6 +2461,25 @@ ${_bt}-lib/libdwarf: ${_bt}-lib/libz
 # libroken depends on libcrypt
 _other_bootstrap_tools+=lib/libcrypt
 ${_bt}-lib/libroken: ${_bt}-lib/libcrypt
+
+# libhcrypto depends on libcom_err libasn1 libcrypt libcrypto libheimbase libroken
+_other_bootstrap_tools+=lib/libhcrypto
+${_bt}-lib/libhcrypto: ${_bt}-lib/libcrypt ${_bt}-lib/libcrypto \
+	${_bt}-lib/libasn1 ${_bt}-lib/libheimbase ${_bt}-lib/libroken
+
+# libheimbase depends on
+_other_bootstrap_tools+=lib/libheimbase
+
+# libhasn1 depends on libcom_err and libroken
+_other_bootstrap_tools+=lib/libasn1
+${_bt}-lib/libasn1: ${_bt}-lib/libcom_err ${_bt}-lib/libroken
+
+# libhwind depends on libcom_err and libroken
+_other_bootstrap_tools+=lib/libwind
+${_bt}-lib/libwind: ${_bt}-lib/libcom_err ${_bt}-lib/libroken
+
+# libcom_err is also needed but has no special dependencies
+_other_bootstrap_tools+=lib/libcom_err
 .else
 # All tools in _basic_bootstrap_tools have the same name as the subdirectory
 # so we can use :T to get the name of the symlinks that we need to create.
@@ -2919,6 +2942,7 @@ lib/libcxxrt__L: lib/libgcc_s__L
 _prebuild_libs=	${_kerberos5_lib_libasn1} \
 		${_kerberos5_lib_libhdb} \
 		${_kerberos5_lib_libheimbase} \
+		${_kerberos5_lib_libhcrypto} \
 		${_kerberos5_lib_libheimntlm} \
 		${_libsqlite3} \
 		${_kerberos5_lib_libheimipcc} \
@@ -3074,6 +3098,7 @@ secure/lib/libssh__L: lib/libldns__L
 .endif
 .if ${MK_GSSAPI} != "no" && ${MK_KERBEROS_SUPPORT} != "no"
 secure/lib/libssh__L: lib/libgssapi__L kerberos5/lib/libkrb5__L \
+    kerberos5/lib/libhcrypto__L \
     kerberos5/lib/libhx509__L kerberos5/lib/libasn1__L lib/libcom_err__L \
     lib/libmd__L kerberos5/lib/libroken__L
 .endif
@@ -3085,19 +3110,27 @@ _secure_lib=	secure/lib
 .if ${MK_KERBEROS} != "no"
 kerberos5/lib/libasn1__L: lib/libcom_err__L kerberos5/lib/libroken__L
 kerberos5/lib/libhdb__L: kerberos5/lib/libasn1__L lib/libcom_err__L \
+    kerberos5/lib/libhcrypto__L \
     kerberos5/lib/libkrb5__L kerberos5/lib/libroken__L \
     kerberos5/lib/libwind__L lib/libsqlite3__L
 kerberos5/lib/libheimntlm__L: secure/lib/libcrypto__L kerberos5/lib/libkrb5__L \
+    kerberos5/lib/libhcrypto__L \
     kerberos5/lib/libroken__L lib/libcom_err__L
 kerberos5/lib/libhx509__L: kerberos5/lib/libasn1__L lib/libcom_err__L \
-    secure/lib/libcrypto__L kerberos5/lib/libroken__L kerberos5/lib/libwind__L
+    secure/lib/libcrypto__L \
+    kerberos5/lib/libhcrypto__L kerberos5/lib/libheimbase__L \
+    kerberos5/lib/libroken__L  kerberos5/lib/libwind__L
+kerberos5/lib/libhcrypto__L: kerberos5/lib/libasn1__L lib/libcom_err__L \
+    kerberos5/lib/libheimbase__L \
+    secure/lib/libcrypto__L kerberos5/lib/libroken__L
 kerberos5/lib/libkrb5__L: kerberos5/lib/libasn1__L lib/libcom_err__L \
+    kerberos5/lib/libhcrypto__L \
     lib/libcrypt__L secure/lib/libcrypto__L kerberos5/lib/libhx509__L \
     kerberos5/lib/libroken__L kerberos5/lib/libwind__L \
     kerberos5/lib/libheimbase__L kerberos5/lib/libheimipcc__L
 kerberos5/lib/libroken__L: lib/libcrypt__L
 kerberos5/lib/libwind__L: kerberos5/lib/libroken__L lib/libcom_err__L
-kerberos5/lib/libheimbase__L: lib/libthr__L
+kerberos5/lib/libheimbase__L: lib/libthr__L kerberos5/lib/libroken__L
 kerberos5/lib/libheimipcc__L: kerberos5/lib/libroken__L kerberos5/lib/libheimbase__L lib/libthr__L
 .endif
 
@@ -3112,6 +3145,7 @@ _kerberos5_lib=	kerberos5/lib
 _kerberos5_lib_libasn1= kerberos5/lib/libasn1
 _kerberos5_lib_libhdb= kerberos5/lib/libhdb
 _kerberos5_lib_libheimbase= kerberos5/lib/libheimbase
+_kerberos5_lib_libhcrypto= kerberos5/lib/libhcrypto
 _kerberos5_lib_libkrb5= kerberos5/lib/libkrb5
 _kerberos5_lib_libhx509= kerberos5/lib/libhx509
 _kerberos5_lib_libroken= kerberos5/lib/libroken
