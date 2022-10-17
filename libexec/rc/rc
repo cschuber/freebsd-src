@@ -91,20 +91,42 @@ if ! [ -e ${firstboot_sentinel} ]; then
 	skip_firstboot="-s firstboot"
 fi
 
+unset parallel
+if checkyesno rc_parallel; then
+	parallel=-p
+fi
+
 # Do a first pass to get everything up to $early_late_divider so that
 # we can do a second pass that includes $local_startup directories
 #
-files=`rcorder ${skip} ${skip_firstboot} /etc/rc.d/* 2>/dev/null`
+files=`rcorder ${parallel} ${skip} ${skip_firstboot} /etc/rc.d/* 2>/dev/null`
 
+SAVED_IFS="$IFS"
+if checkyesno rc_parallel; then
+	IFS='
+'
+fi
 _rc_elem_done=' '
 for _rc_elem in ${files}; do
-	run_rc_script ${_rc_elem} ${_boot}
-	_rc_elem_done="${_rc_elem_done}${_rc_elem} "
+	if checkyesno rc_parallel; then
+		IFS=' '
+		for _rc_subelem in ${_rc_elem}; do
+			run_rc_script ${_rc_subelem} ${_boot} &
+			_rc_elem_done="${_rc_elem_done}${_rc_subelem} "
+		done
+		IFS='
+		wait
+'
+	else
+		run_rc_script ${_rc_elem} ${_boot}
+		_rc_elem_done="${_rc_elem_done}${_rc_elem} "
+	fi
 
 	case "$_rc_elem" in
 	*/${early_late_divider})	break ;;
 	esac
 done
+IFS="$SAVED_IFS"
 
 unset files local_rc
 
@@ -122,14 +144,30 @@ if [ -e ${firstboot_sentinel} ]; then
 	skip_firstboot=""
 fi
 
-files=`rcorder ${skip} ${skip_firstboot} /etc/rc.d/* ${local_rc} 2>/dev/null`
+if checkyesno rc_parallel; then
+	IFS='
+'
+fi
+files=`rcorder ${parallel} ${skip} ${skip_firstboot} /etc/rc.d/* ${local_rc} 2>/dev/null`
 for _rc_elem in ${files}; do
 	case "$_rc_elem_done" in
 	*" $_rc_elem "*)	continue ;;
 	esac
 
-	run_rc_script ${_rc_elem} ${_boot}
+	if checkyesno rc_parallel; then
+		IFS=' '
+		for _rc_subelem in ${_rc_subelem}; do
+			run_rc_script ${_rc_subelem} ${_boot} &
+		done
+		IFS='
+		wait
+'
+	else
+		run_rc_script ${_rc_elem} ${_boot}
+	fi
 done
+IFS="$SAVED_IFS"
+unset parallel
 
 # Remove the firstboot sentinel, and reboot if it was requested.
 # Be a bit paranoid about removing it to handle the common failure
