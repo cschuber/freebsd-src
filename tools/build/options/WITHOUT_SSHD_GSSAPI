@@ -1,0 +1,3 @@
+.\" $FreeBSD$
+Do not build OpenSSH with GSSAPI support, relying entirely on PAM for
+GSSAPI support.

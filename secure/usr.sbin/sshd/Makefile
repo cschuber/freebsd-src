@@ -51,7 +51,7 @@ LIBADD+= blacklist
 LDFLAGS+=-L${LIBBLACKLISTDIR}
 .endif
 
-.if ${MK_GSSAPI} != "no" && ${MK_KERBEROS_SUPPORT} != "no"
+.if ${MK_GSSAPI} != "no" && ${MK_KERBEROS_SUPPORT} != "no" && ${MK_SSHD_GSSAPI} != "no"
 CFLAGS+= -include krb5_config.h
 SRCS+=	krb5_config.h
 LIBADD+=	gssapi_krb5 gssapi krb5

@@ -65,6 +65,7 @@ __DEFAULT_YES_OPTIONS = \
     NLS \
     OPENSSH \
     RELRO \
+    SSHD_GSSAPI \
     SSP \
     TESTS \
     TOOLCHAIN \
