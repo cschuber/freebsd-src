@@ -43,5 +43,6 @@
 /* Bits for R92E_AFE_XTAL_CTRL. */
 #define R92E_AFE_XTAL_CTRL_ADDR_M	0x00fff000
 #define R92E_AFE_XTAL_CTRL_ADDR_S	12
+#define R92E_USB_DELAY_US_DEF		1000
 
 #endif	/* R92E_REG_H */

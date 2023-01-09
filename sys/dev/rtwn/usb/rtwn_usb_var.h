@@ -28,6 +28,7 @@
 #define RTWN_USB_RXBUFSZ_DEF		(24)
 #define RTWN_USB_RXBUFSZ_MAX		(64)
 #define RTWN_USB_TXBUFSZ		(16 * 1024)
+#define RTWN_USB_DELAY_US_DEF		0
 
 #define RTWN_IFACE_INDEX		0
 
@@ -79,6 +80,8 @@ struct rtwn_usb_softc {
 
 	int			ntx;
 	int			tx_agg_desc_num;
+	int			uc_delay_us;
+	int			uc_write_delay;
 };
 #define RTWN_USB_SOFTC(sc)	((struct rtwn_usb_softc *)(sc))
 

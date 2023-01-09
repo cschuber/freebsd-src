@@ -372,6 +372,11 @@ rtwn_usb_sysctlattach(struct rtwn_softc *sc)
 		uc->uc_rx_buf_size = RTWN_USB_RXBUFSZ_MIN;
 	if (uc->uc_rx_buf_size > RTWN_USB_RXBUFSZ_MAX)
 		uc->uc_rx_buf_size = RTWN_USB_RXBUFSZ_MAX;
+
+	uc->uc_delay_us = RTWN_USB_DELAY_US_DEF;
+	SYSCTL_ADD_INT(ctx, SYSCTL_CHILDREN(tree), OID_AUTO,
+	    "delay_us", CTLFLAG_RWTUN, &uc->uc_delay_us,
+	    uc->uc_delay_us, "RTWN USB set channel delay microseconds");
 }
 
 static int

@@ -91,12 +91,16 @@ rtwn_usb_write_region_1(struct rtwn_softc *sc, uint16_t addr, uint8_t *buf,
     int len)
 {
 	usb_device_request_t req;
+	struct rtwn_usb_softc *uc;
 
 	req.bmRequestType = UT_WRITE_VENDOR_DEVICE;
 	req.bRequest = R92C_REQ_REGS;
 	USETW(req.wValue, addr);
 	USETW(req.wIndex, 0);
 	USETW(req.wLength, len);
+	uc = RTWN_USB_SOFTC(sc);
+	if (uc->uc_write_delay == 1)
+		(sc->sc_delay)(sc,uc->uc_delay_us);
 	return (rtwn_do_request(sc, &req, buf));
 }
 

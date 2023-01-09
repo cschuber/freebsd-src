@@ -55,6 +55,8 @@ __FBSDID("$FreeBSD$");
 
 #include <dev/rtwn/if_rtwn_debug.h>
 
+#include <dev/rtwn/usb/rtwn_usb_var.h>
+
 #include <dev/rtwn/rtl8192c/r92c.h>
 
 #include <dev/rtwn/rtl8192e/r92e.h>
@@ -226,7 +228,14 @@ r92e_power_on(struct rtwn_softc *sc)
 	if (res != 0)		\
 		return (EIO);	\
 } while(0)
+	struct rtwn_usb_softc *uc;
 	int ntries;
+
+	if ((uc = RTWN_USB_SOFTC(sc)) != NULL) {
+		RTWN_LOCK(sc);
+		uc->uc_write_delay = 1;
+		RTWN_UNLOCK(sc);
+	}
 
 	if (rtwn_read_4(sc, R92C_SYS_CFG) & R92C_SYS_CFG_TRP_BT_EN)
 		RTWN_CHK(rtwn_write_1(sc, R92C_LDO_SWR_CTRL, 0xc3));
@@ -254,6 +263,11 @@ r92e_power_on(struct rtwn_softc *sc)
 		rtwn_delay(sc, 10);
 	}
 	if (ntries == 5000) {
+		if (uc != NULL) {
+			RTWN_LOCK(sc);
+			uc->uc_write_delay = 0;
+			RTWN_UNLOCK(sc);
+		}
 		device_printf(sc->sc_dev,
 		    "timeout waiting for chip power up\n");
 		return (ETIMEDOUT);
@@ -271,8 +285,14 @@ r92e_power_on(struct rtwn_softc *sc)
 			break;
 		rtwn_delay(sc, 10);
 	}
-	if (ntries == 5000)
+	if (ntries == 5000) {
+		if (uc != NULL) {
+			RTWN_LOCK(sc);
+			uc->uc_write_delay = 0;
+			RTWN_UNLOCK(sc);
+		}
 		return (ETIMEDOUT);
+	}
 
 	/* Enable MAC DMA/WMAC/SCHEDULE/SEC blocks. */
 	RTWN_CHK(rtwn_write_2(sc, R92C_CR, 0));
@@ -283,18 +303,36 @@ r92e_power_on(struct rtwn_softc *sc)
 	    ((sc->sc_hwcrypto != RTWN_CRYPTO_SW) ? R92C_CR_ENSEC : 0) |
 	    R92C_CR_CALTMR_EN));
 
+	if (uc != NULL) {
+		RTWN_LOCK(sc);
+		uc->uc_write_delay = 0;
+		RTWN_UNLOCK(sc);
+	}
 	return (0);
 }
 
 void
 r92e_power_off(struct rtwn_softc *sc)
 {
+	struct rtwn_usb_softc *uc;
 	int error, ntries;
+
+	if ((uc = RTWN_USB_SOFTC(sc)) != NULL) {
+		RTWN_LOCK(sc);
+		uc->uc_write_delay = 1;
+		RTWN_UNLOCK(sc);
+	}
 
 	/* Stop Rx. */
 	error = rtwn_write_1(sc, R92C_CR, 0);
-	if (error == ENXIO)	/* hardware gone */
+	if (error == ENXIO) {	/* hardware gone */
+		if (uc != NULL) {
+			RTWN_LOCK(sc);
+			uc->uc_write_delay = 0;
+			RTWN_UNLOCK(sc);
+		}
 		return;
+	}
 
 	/* Move card to Low Power state. */
 	/* Block all Tx queues. */
@@ -308,6 +346,11 @@ r92e_power_off(struct rtwn_softc *sc)
 		rtwn_delay(sc, 10);
 	}
 	if (ntries == 5000) {
+		if (uc != NULL) {
+			RTWN_LOCK(sc);
+			uc->uc_write_delay = 0;
+			RTWN_UNLOCK(sc);
+		}
 		device_printf(sc->sc_dev, "%s: failed to block Tx queues\n",
 		    __func__);
 		return;
@@ -365,6 +408,11 @@ r92e_power_off(struct rtwn_softc *sc)
 		rtwn_delay(sc, 10);
 	}
 	if (ntries == 5000) {
+		if (uc != NULL) {
+			RTWN_LOCK(sc);
+			uc->uc_write_delay = 0;
+			RTWN_UNLOCK(sc);
+		}
 		device_printf(sc->sc_dev, "%s: could not turn off MAC\n",
 		    __func__);
 		return;
@@ -387,4 +435,10 @@ r92e_power_off(struct rtwn_softc *sc)
 	/* Enable SW LPS. */
 	rtwn_setbits_1_shift(sc, R92C_APS_FSMCO, 0,
 	    R92C_APS_FSMCO_APFM_RSM, 1);
+
+	if (uc != NULL) {
+		RTWN_LOCK(sc);
+		uc->uc_write_delay = 0;
+		RTWN_UNLOCK(sc);
+	}
 }

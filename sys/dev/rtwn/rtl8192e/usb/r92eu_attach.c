@@ -102,6 +102,7 @@ r92eu_attach(struct rtwn_usb_softc *uc)
 	/* USB part. */
 	uc->uc_align_rx			= r12au_align_rx;
 	uc->tx_agg_desc_num		= 3;
+	uc->uc_delay_us			= R92E_USB_DELAY_US_DEF;
 
 	/* Common part. */
 	sc->sc_flags			= RTWN_FLAG_EXT_HDR;

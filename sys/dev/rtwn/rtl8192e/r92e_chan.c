@@ -62,6 +62,7 @@ __FBSDID("$FreeBSD$");
 #include <dev/rtwn/rtl8192e/r92e.h>
 #include <dev/rtwn/rtl8192e/r92e_reg.h>
 #include <dev/rtwn/rtl8192e/r92e_var.h>
+#include <dev/rtwn/usb/rtwn_usb_var.h>
 
 static int
 r92e_get_power_group(struct rtwn_softc *sc, struct ieee80211_channel *c)
@@ -212,9 +213,15 @@ void
 r92e_set_chan(struct rtwn_softc *sc, struct ieee80211_channel *c)
 {
 	struct r92e_softc *rs = sc->sc_priv;
+	struct rtwn_usb_softc *uc;
 	u_int chan;
 	int i;
 
+	if ((uc = RTWN_USB_SOFTC(sc)) != NULL) {
+		RTWN_LOCK(sc);
+		uc->uc_write_delay = 1;
+		RTWN_UNLOCK(sc);
+	}
 	chan = rtwn_chan2centieee(c);
 
 	for (i = 0; i < sc->nrxchains; i++) {
@@ -229,4 +236,9 @@ r92e_set_chan(struct rtwn_softc *sc, struct ieee80211_channel *c)
 
 	/* Set Tx power for this new channel. */
 	r92e_set_txpower(sc, c);
+	if (uc != NULL) {
+		RTWN_LOCK(sc);
+		uc->uc_write_delay = 0;
+		RTWN_UNLOCK(sc);
+	}
 }
