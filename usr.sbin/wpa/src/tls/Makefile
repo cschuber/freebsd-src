@@ -1,5 +1,6 @@
 .include <src.opts.mk>
 
+.include "../Makefile.inc"
 .include "../../Makefile.inc"
 
 .include "../../Makefile.crypto"
