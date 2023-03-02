@@ -50,6 +50,8 @@ __FBSDID("$FreeBSD$");
 #include <dev/rtwn/rtl8192c/r92c.h>
 #include <dev/rtwn/rtl8192c/r92c_var.h>
 
+#include <dev/rtwn/usb/rtwn_usb_var.h>
+
 #include <dev/rtwn/rtl8188e/usb/r88eu.h>
 #include <dev/rtwn/rtl8188e/usb/r88eu_reg.h>
 
@@ -78,7 +80,14 @@ r88eu_power_on(struct rtwn_softc *sc)
 	if (res != 0)		\
 		return (EIO);	\
 } while(0)
+	struct rtwn_usb_softc *uc;
 	int ntries;
+
+	if ((uc = RTWN_USB_SOFTC(sc)) != NULL) {
+		RTWN_LOCK(sc);
+		uc->uc_write_delay = 1;
+		RTWN_UNLOCK(sc);
+	}
 
 	/* Wait for power ready bit. */
 	for (ntries = 0; ntries < 5000; ntries++) {
@@ -87,6 +96,11 @@ r88eu_power_on(struct rtwn_softc *sc)
 		rtwn_delay(sc, 10);
 	}
 	if (ntries == 5000) {
+		if (uc != NULL) {
+			RTWN_LOCK(sc);
+			uc->uc_write_delay = 0;
+			RTWN_UNLOCK(sc);
+		}
 		device_printf(sc->sc_dev,
 		    "timeout waiting for chip power up\n");
 		return (ETIMEDOUT);
@@ -114,7 +128,13 @@ r88eu_power_on(struct rtwn_softc *sc)
 			break;
 		rtwn_delay(sc, 10);
 	}
-	if (ntries == 5000)
+	if (ntries == 5000) {
+		if (uc != NULL) {
+			RTWN_LOCK(sc);
+			uc->uc_write_delay = 0;
+			RTWN_UNLOCK(sc);
+		}
+	}
 		return (ETIMEDOUT);
 
 	/* Enable LDO normal mode. */
@@ -130,6 +150,11 @@ r88eu_power_on(struct rtwn_softc *sc)
 	    ((sc->sc_hwcrypto != RTWN_CRYPTO_SW) ? R92C_CR_ENSEC : 0) |
 	    R92C_CR_CALTMR_EN));
 
+	if (uc != NULL) {
+		RTWN_LOCK(sc);
+		uc->uc_write_delay = 0;
+		RTWN_UNLOCK(sc);
+	}
 	return (0);
 #undef RTWN_CHK
 }

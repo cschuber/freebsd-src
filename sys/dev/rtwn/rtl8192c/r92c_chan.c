@@ -54,6 +54,7 @@ __FBSDID("$FreeBSD$");
 #include <dev/rtwn/rtl8192c/r92c_priv.h>
 #include <dev/rtwn/rtl8192c/r92c_reg.h>
 #include <dev/rtwn/rtl8192c/r92c_var.h>
+#include <dev/rtwn/usb/rtwn_usb_var.h>
 
 static int
 r92c_get_power_group(struct rtwn_softc *sc, struct ieee80211_channel *c)
@@ -293,8 +294,15 @@ void
 r92c_set_chan(struct rtwn_softc *sc, struct ieee80211_channel *c)
 {
 	struct r92c_softc *rs = sc->sc_priv;
+	struct rtwn_usb_softc *uc;
 	u_int chan;
 	int i;
+
+	if ((uc = RTWN_USB_SOFTC(sc)) != NULL) {
+		RTWN_LOCK(sc);
+		uc->uc_write_delay = 1;
+		RTWN_UNLOCK(sc);
+	}
 
 	chan = rtwn_chan2centieee(c);
 
@@ -309,6 +317,12 @@ r92c_set_chan(struct rtwn_softc *sc, struct ieee80211_channel *c)
 		r92c_set_bw40(sc, chan, IEEE80211_IS_CHAN_HT40U(c));
 	else
 		rtwn_r92c_set_bw20(sc, chan);
+
+	if (uc != NULL) {
+		RTWN_LOCK(sc);
+		uc->uc_write_delay = 0;
+		RTWN_UNLOCK(sc);
+	}
 }
 
 void

@@ -122,5 +122,6 @@
 
 /* Bits for R88E_XCK_OUT_CTRL. */
 #define R88E_XCK_OUT_CTRL_EN	1
+#define R88E_USB_DELAY_US_DEF	1000
 
 #endif	/* R88E_REG_H */
