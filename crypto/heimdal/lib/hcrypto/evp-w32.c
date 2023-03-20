@@ -109,7 +109,10 @@ _hc_w32crypto_DllMain(HINSTANCE hinstDLL,
 	return hc_EVP_hcrypto_ ##name ();		    \
     }
 
+<<<<<<< HEAD
 EVP_W32CRYPTO_PROVIDER(EVP_MD, md2)
+=======
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 EVP_W32CRYPTO_PROVIDER(EVP_MD, md4)
 EVP_W32CRYPTO_PROVIDER(EVP_MD, md5)
 EVP_W32CRYPTO_PROVIDER(EVP_MD, sha1)

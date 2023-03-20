@@ -53,7 +53,11 @@ rk_getpwnam_r(const char *name, struct passwd *pwd, char *buffer,
 	      size_t bufsize, struct passwd **result)
 {
      struct passwd *p;
+<<<<<<< HEAD
      size_t slen, n = 0;
+=======
+     size_t slen;
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
      
      *result = NULL;
 

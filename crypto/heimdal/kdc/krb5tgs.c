@@ -912,6 +912,12 @@ tgs_make_reply(krb5_context context,
     et.flags.hw_authent  = tgt->flags.hw_authent;
     et.flags.ok_as_delegate = server->entry.flags.ok_as_delegate;
 
+    /* See MS-KILE 3.3.5.1 */
+    if (!server->entry.flags.forwardable)
+	et.flags.forwardable = 0;
+    if (!server->entry.flags.proxiable)
+	et.flags.proxiable = 0;
+
     /*
      * For anonymous tickets, we should filter out positive authorization data
      * that could reveal the client's identity, and return a policy error for
@@ -1660,6 +1666,10 @@ tgs_build_reply(krb5_context context,
 
 	s = &adtkt.cname;
 	r = adtkt.crealm;
+    } else if (s == NULL) {
+	ret = KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN;
+	kdc_log(context, config, 0, "No server in request");
+	goto out;
     }
 
     _krb5_principalname2krb5_principal(context, &sp, *s, r);
@@ -2125,6 +2135,9 @@ server_lookup:
 		goto out;
 	    }
 
+	    /* Ignore require_pwchange and pw_end attributes (as Windows does),
+	     * since S4U2Self is not password authentication. */
+	    s4u2self_impersonated_client->entry.flags.require_pwchange = FALSE;
 	    free(s4u2self_impersonated_client->entry.pw_end);
 	    s4u2self_impersonated_client->entry.pw_end = NULL;
 

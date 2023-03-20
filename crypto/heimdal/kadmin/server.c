@@ -709,6 +709,120 @@ check_aliases(kadm5_server_context *contextp,
     return 0;
 }
 
+struct iter_aliases_ctx {
+    HDB_Ext_Aliases aliases;
+    krb5_tl_data *tl;
+    int alias_idx;
+    int done;
+};
+
+static kadm5_ret_t
+iter_aliases(kadm5_principal_ent_rec *from,
+             struct iter_aliases_ctx *ctx,
+             krb5_principal *out)
+{
+    HDB_extension ext;
+    kadm5_ret_t ret;
+    size_t size;
+
+    *out = NULL;
+
+    if (ctx->done > 0)
+        return 0;
+
+    if (ctx->done == 0) {
+        if (ctx->alias_idx < ctx->aliases.aliases.len) {
+            *out = &ctx->aliases.aliases.val[ctx->alias_idx++];
+            return 0;
+        }
+        /* Out of aliases in this TL, step to next TL */
+        ctx->tl = ctx->tl->tl_data_next;
+    } else if (ctx->done < 0) {
+        /* Setup iteration context */
+        memset(ctx, 0, sizeof(*ctx));
+        ctx->done = 0;
+        ctx->aliases.aliases.val = NULL;
+        ctx->aliases.aliases.len = 0;
+        ctx->tl = from->tl_data;
+    }
+
+    free_HDB_Ext_Aliases(&ctx->aliases);
+    ctx->alias_idx = 0;
+
+    /* Find TL with aliases */
+    for (; ctx->tl != NULL; ctx->tl = ctx->tl->tl_data_next) {
+        if (ctx->tl->tl_data_type != KRB5_TL_EXTENSION)
+            continue;
+
+        ret = decode_HDB_extension(ctx->tl->tl_data_contents,
+                                   ctx->tl->tl_data_length,
+                                   &ext, &size);
+        if (ret)
+            return ret;
+        if (ext.data.element == choice_HDB_extension_data_aliases &&
+            ext.data.u.aliases.aliases.len > 0) {
+            ctx->aliases = ext.data.u.aliases;
+            break;
+        }
+        free_HDB_extension(&ext);
+    }
+
+    if (ctx->tl != NULL && ctx->aliases.aliases.len > 0) {
+        *out = &ctx->aliases.aliases.val[ctx->alias_idx++];
+        return 0;
+    }
+
+    ctx->done = 1;
+    return 0;
+}
+
+static kadm5_ret_t
+check_aliases(kadm5_server_context *contextp,
+              kadm5_principal_ent_rec *add_princ,
+              kadm5_principal_ent_rec *del_princ)
+{
+    kadm5_ret_t ret;
+    struct iter_aliases_ctx iter;
+    struct iter_aliases_ctx iter_del;
+    krb5_principal new_name, old_name;
+    int match;
+
+    /*
+     * Yeah, this is O(N^2).  Gathering and sorting all the aliases
+     * would be a bit of a pain; if we ever have principals with enough
+     * aliases for this to be a problem, we can fix it then.
+     */
+    for (iter.done = -1; iter.done != 1;) {
+        match = 0;
+        ret = iter_aliases(add_princ, &iter, &new_name);
+        if (ret)
+            return ret;
+        if (iter.done == 1)
+            break;
+        for (iter_del.done = -1; iter_del.done != 1;) {
+            ret = iter_aliases(del_princ, &iter_del, &old_name);
+            if (ret)
+                return ret;
+            if (iter_del.done == 1)
+                break;
+            if (!krb5_principal_compare(contextp->context, new_name, old_name))
+                continue;
+            free_HDB_Ext_Aliases(&iter_del.aliases);
+            match = 1;
+            break;
+        }
+        if (match)
+            continue;
+        ret = _kadm5_acl_check_permission(contextp, KADM5_PRIV_ADD, new_name);
+        if (ret) {
+            free_HDB_Ext_Aliases(&iter.aliases);
+            return ret;
+        }
+    }
+
+    return 0;
+}
+
 static void
 v5_loop (krb5_context contextp,
 	 krb5_auth_context ac,

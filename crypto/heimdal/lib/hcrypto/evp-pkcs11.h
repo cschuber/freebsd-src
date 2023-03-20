@@ -35,7 +35,10 @@
 
 /* symbol renaming */
 
+<<<<<<< HEAD
 #define EVP_pkcs11_md2() hc_EVP_pkcs11_md2()
+=======
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 #define EVP_pkcs11_md4() hc_EVP_pkcs11_md4()
 #define EVP_pkcs11_md5() hc_EVP_pkcs11_md5()
 #define EVP_pkcs11_sha1() hc_EVP_pkcs11_sha1()
@@ -59,7 +62,10 @@
 #define EVP_pkcs11_camellia_192_cbc() hc_EVP_pkcs11_camellia_192_cbc()
 #define EVP_pkcs11_camellia_256_cbc() hc_EVP_pkcs11_camellia_256_cbc()
 
+<<<<<<< HEAD
 #define EVP_pkcs11_hcrypto_md2() hc_EVP_pkcs11_hcrypto_md2()
+=======
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 #define EVP_pkcs11_hcrypto_md4() hc_EVP_pkcs11_hcrypto_md4()
 #define EVP_pkcs11_hcrypto_md5() hc_EVP_pkcs11_hcrypto_md5()
 #define EVP_pkcs11_hcrypto_sha1() hc_EVP_pkcs11_hcrypto_sha1()
@@ -89,7 +95,10 @@ HC_CPP_BEGIN
  * Strict PKCS#11 implementations (these will return NULL if the underlying
  * PKCS#11 implementation does not implement the cipher or hash).
  */
+<<<<<<< HEAD
 const EVP_MD * hc_EVP_pkcs11_md2(void);
+=======
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 const EVP_MD * hc_EVP_pkcs11_md4(void);
 const EVP_MD * hc_EVP_pkcs11_md5(void);
 const EVP_MD * hc_EVP_pkcs11_sha1(void);
@@ -122,7 +131,10 @@ const EVP_CIPHER * hc_EVP_pkcs11_camellia_256_cbc(void);
 /*
  * PKCS#11 implementations with fallback to hcrypto.
  */
+<<<<<<< HEAD
 const EVP_MD * hc_EVP_pkcs11_hcrypto_md2(void);
+=======
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 const EVP_MD * hc_EVP_pkcs11_hcrypto_md4(void);
 const EVP_MD * hc_EVP_pkcs11_hcrypto_md5(void);
 const EVP_MD * hc_EVP_pkcs11_hcrypto_sha1(void);

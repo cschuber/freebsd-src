@@ -38,6 +38,11 @@
 
 #include "roken.h"
 
+<<<<<<< HEAD
+=======
+#ifndef HAVE_STRTOULL
+
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 /* #include <sys/cdefs.h> */
 
 #include <limits.h>
@@ -124,4 +129,8 @@ noconv:
 	*endptr = (char *)(any ? s - 1 : nptr);
     return (acc);
 }
+<<<<<<< HEAD
 
+=======
+#endif /* !HAVE_STRTOULL */
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788

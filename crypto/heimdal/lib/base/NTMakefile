@@ -37,7 +37,17 @@ intcflags=-I$(SRCDIR) -I$(OBJ)
 
 INCFILES=$(INCDIR)\heimbase.h
 
+<<<<<<<< HEAD:crypto/heimdal/lib/base/NTMakefile
 test_binaries = $(OBJ)\test_base.exe
+========
+# pmode 0600 = _S_IREAD | _S_IWRITE
+cdefines = $(cdefines) \
+	-DSQLITE_DEFAULT_FILE_PERMISSIONS=0600 \
+	-DSQLITE_THREADSAFE=1
+
+$(LIBSQLITE): $(OBJ)\sqlite3.obj
+	$(LIBCON)
+>>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788:crypto/heimdal/lib/sqlite/NTMakefile
 
 libheimbase_OBJS =		\
 	$(OBJ)\array.obj	\

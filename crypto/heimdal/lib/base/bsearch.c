@@ -275,11 +275,20 @@ bsearch_common(const char *buf, size_t sz, const char *key,
 	    ret = 0;
 	    if (val_len && value) {
 		/* Avoid strndup() so we don't need libroken here yet */
+<<<<<<< HEAD
 		*value = malloc(val_len + 1);
 		if (!*value)
 		    ret = errno;
 		(void) memcpy(*value, &buf[val_start], val_len);
 		(*value)[val_len] = '\0';
+=======
+		if ((*value = malloc(val_len + 1))) {
+                    (void) memcpy(*value, &buf[val_start], val_len);
+                    (*value)[val_len] = '\0';
+                } else {
+                    ret = errno;
+                }
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 	    }
 	    break;
 	}
@@ -708,6 +717,13 @@ _bsearch_file(bsearch_file_handle bfh, const char *key,
 
     if (reads)
 	*reads = 0;
+<<<<<<< HEAD
+=======
+    if (value)
+	*value = NULL;
+    if (loops)
+	*loops = 0;
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 
     /* If whole file is in memory then search that and we're done */
     if (bfh->file_sz == bfh->cache_sz)
@@ -715,11 +731,14 @@ _bsearch_file(bsearch_file_handle bfh, const char *key,
 
     /* Else block-wise binary search */
 
+<<<<<<< HEAD
     if (value)
 	*value = NULL;
     if (loops)
 	*loops = 0;
 
+=======
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
     l = 0;
     r = (bfh->file_sz / bfh->page_sz) + 1;
     for (level = 0, page = r >> 1; page >= l && page < r ; level++) {
@@ -851,7 +870,11 @@ stdb_copy_value(void *db, heim_string_t table, heim_data_t key,
 {
     bsearch_file_handle bfh = db;
     const char *k;
+<<<<<<< HEAD
     char *v;
+=======
+    char *v = NULL;
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
     heim_data_t value;
     int ret;
 
@@ -869,6 +892,11 @@ stdb_copy_value(void *db, heim_string_t table, heim_data_t key,
     else
 	k = (const char *)heim_data_get_ptr(key);
     ret = _bsearch_file(bfh, k, &v, NULL, NULL, NULL);
+<<<<<<< HEAD
+=======
+    if (ret == 0 && v == NULL)
+        ret = -1; /* Quiet lint */
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
     if (ret != 0) {
 	if (ret > 0 && error)
 	    *error = heim_error_create(ret, "%s", strerror(ret));

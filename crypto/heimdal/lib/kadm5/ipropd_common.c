@@ -207,10 +207,10 @@ restarter(krb5_context context, size_t *countp)
 
     assert(pid > 0);
     if (wpid != pid) {
-        warnx("Interrupted; killing child (pid %ld) with %jd",
-              (long)pid, (intmax_t)exit_flag);
-        krb5_warnx(context, "Interrupted; killing child (pid %ld) with %jd",
-                   (long)pid, (intmax_t)exit_flag);
+        warnx("Interrupted; killing child (pid %ld) with %d",
+              (long)pid, exit_flag);
+        krb5_warnx(context, "Interrupted; killing child (pid %ld) with %d",
+                   (long)pid, exit_flag);
         kill(pid, exit_flag);
 
         /* Wait up to one second for the child */

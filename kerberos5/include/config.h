@@ -201,7 +201,7 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* define if you have a berkeley db1/2 library */
 #define HAVE_DB1 1
 
-/* define if you have a berkeley db3/4/5 library */
+/* define if you have a berkeley db3/4/5/6 library */
 /* #undef HAVE_DB3 */
 
 /* Define to 1 if you have the <db3/db.h> header file. */
@@ -324,8 +324,8 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define if you have the function `ecalloc'. */
 /* #undef HAVE_ECALLOC */
 
-/* Define to 1 if you have the <editline/readline.h > header file. */
-/* #undef HAVE_EDITLINE_READLINE_H_ */
+/* Define to 1 if you have the <editline/readline.h> header file. */
+/* #undef HAVE_EDITLINE_READLINE_H */
 
 /* Define if you have the function `emalloc'. */
 /* #undef HAVE_EMALLOC */
@@ -595,9 +595,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define if you have the function `memmove'. */
 #define HAVE_MEMMOVE 1
 
-/* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H 1
-
 /* Define if you have the function `memset_s'. */
 #define HAVE_MEMSET_S 1
 
@@ -614,7 +611,7 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* #undef HAVE_NDBM */
 
 /* Define to 1 if you have the <ndbm.h> header file. */
-/* #undef HAVE_NDBM_H */
+#define HAVE_NDBM_H 1
 
 /* Define to 1 if you have the <netdb.h> header file. */
 #define HAVE_NETDB_H 1
@@ -698,18 +695,13 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define HAVE_RCMD 1
 
 /* Define if you have a readline compatible library. */
-/* #undef HAVE_READLINE */
+#define HAVE_READLINE 1
 
-/* Define to 1 if you have the
-   <[readline.h])[][]_AH_CHECK_HEADER([readline/readline.h])[][]_AH_CHECK_HEADER([editline/readline.h]>
-   header file. */
-#define HAVE_READLINE_H 1
+/* Define to 1 if you have the <readline.h> header file. */
+/* #undef HAVE_READLINE_H */
 
 /* Define to 1 if you have the <readline/readline.h> header file. */
 #define HAVE_READLINE_READLINE_H 1
-
-/* Define to 1 if you have the <readline/readline.h > header file. */
-/* #undef HAVE_READLINE_READLINE_H_ */
 
 /* Define if you have the function `readv'. */
 #define HAVE_READV 1
@@ -845,6 +837,9 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#define HAVE_STDIO_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
@@ -982,7 +977,7 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define HAVE_SYSLOG_H 1
 
 /* Define to 1 if you have the <sys/auxv.h> header file. */
-#define HAVE_SYS_AUXV_H 1
+/* #undef HAVE_SYS_AUXV_H */
 
 /* Define to 1 if you have the <sys/bitypes.h> header file. */
 /* #undef HAVE_SYS_BITYPES_H */
@@ -1273,14 +1268,18 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define HAVE___PROGNAME 1
 
 /* have __sync_add_and_fetch */
+#if defined(__FreeBSD__) && defined(__arm__)
+#undef HAVE___SYNC_ADD_AND_FETCH   /* Not supported on FreeBSD/arm */
+#else
 #define HAVE___SYNC_ADD_AND_FETCH 1
+#endif
 
 /* Define to one of cc, pkcs11, ossl, w32crypto, or hcrypto to set a default
    hcrypto provider */
 /* #undef HCRYPTO_DEF_PROVIDER */
 
 /* Set to 1 to allow fallback to hcrypto for unavailable algorithms */
-#define HCRYPTO_FALLBACK 0
+#define HCRYPTO_FALLBACK 1
 
 /* Define if you want support for weak crypto */
 #define HEIM_WEAK_CRYPTO 1
@@ -1431,7 +1430,7 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define PACKAGE_NAME "Heimdal"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Heimdal 7.7.0"
+#define PACKAGE_STRING "Heimdal 7.8.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "heimdal"
@@ -1440,7 +1439,7 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "7.7.0"
+#define PACKAGE_VERSION "7.8.0"
 
 /* path to PKCS11 module */
 /* #undef PKCS11_MODULE_PATH */
@@ -1469,7 +1468,9 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define if you have the sqlite3 package. */
 /* #undef SQLITE3 */
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #define STDC_HEADERS 1
 
 /* Define if you have streams ptys. */
@@ -1488,14 +1489,15 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to what version of SunOS you are running. */
 /* #undef SunOS */
 
-/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
+/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. This
+   macro is obsolete. */
 #define TIME_WITH_SYS_TIME 1
 
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 /* #undef TM_IN_SYS_TIME */
 
 /* Version number of package */
-#define VERSION "7.7.0"
+#define VERSION "7.8.0"
 
 /* Define if signal handlers return void. */
 #define VOID_RETSIGTYPE 1
@@ -1509,11 +1511,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 
 /* Required for functional/sane headers on AIX */
 /* #undef _ALL_SOURCE */
-
-/* Enable large inode numbers on Mac OS X 10.5.  */
-#ifndef _DARWIN_USE_64_BIT_INODE
-# define _DARWIN_USE_64_BIT_INODE 1
-#endif
 
 /* Number of bits in a file offset, on hosts where this is settable. */
 /* #undef _FILE_OFFSET_BITS */
@@ -1551,7 +1548,7 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to `long int' if <sys/types.h> does not define. */
 /* #undef off_t */
 
-/* Define to `int' if <sys/types.h> does not define. */
+/* Define as a signed integer type capable of holding a process identifier. */
 /* #undef pid_t */
 
 /* Path name delimiter */
@@ -1574,10 +1571,6 @@ struct sockaddr_dl;
 struct sockaddr_in;
 #endif
 
-#ifdef __APPLE__
-#include <AvailabilityMacros.h>
-#endif
-
 #ifdef ROKEN_RENAME
 #include "roken_rename.h"
 #endif
@@ -1586,10 +1579,6 @@ struct sockaddr_in;
 #define SIGRETURN(x) return
 #else
 #define SIGRETURN(x) return (RETSIGTYPE)(x)
-#endif
-
-#ifdef BROKEN_REALLOC
-#define realloc(X, Y) rk_realloc((X), (Y))
 #endif
 
 
@@ -1618,3 +1607,7 @@ struct sockaddr_in;
 #define LOGIN_PATH BINDIR "/login"
 #endif
 
+
+#ifdef __APPLE__
+#include <AvailabilityMacros.h>
+#endif

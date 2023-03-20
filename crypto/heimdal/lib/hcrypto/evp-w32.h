@@ -34,7 +34,10 @@
 #define HEIM_EVP_W32_H 1
 
 /* symbol renaming */
+<<<<<<< HEAD
 #define EVP_w32crypto_md2() hc_EVP_w32crypto_md2()
+=======
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 #define EVP_w32crypto_md4() hc_EVP_w32crypto_md4()
 #define EVP_w32crypto_md5() hc_EVP_w32crypto_md5()
 #define EVP_w32crypto_sha1() hc_EVP_w32crypto_sha1()
@@ -65,7 +68,10 @@
 
 HC_CPP_BEGIN
 
+<<<<<<< HEAD
 const EVP_MD * hc_EVP_w32crypto_md2(void);
+=======
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 const EVP_MD * hc_EVP_w32crypto_md4(void);
 const EVP_MD * hc_EVP_w32crypto_md5(void);
 const EVP_MD * hc_EVP_w32crypto_sha1(void);

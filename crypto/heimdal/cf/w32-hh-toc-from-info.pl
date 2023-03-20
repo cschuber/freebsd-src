@@ -56,7 +56,13 @@ my $tree = HTML::TreeBuilder->new();
 $tree->parse_file($input_file);
 
 my $contents = $tree->look_down('class', 'contents');
+<<<<<<< HEAD
 my $clist = $contents->find_by_tag_name('ul');
+=======
+if (defined($contents)) {
+  my $clist = $contents->find_by_tag_name('ul');
+}
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 
 print TOC '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
@@ -79,6 +85,11 @@ sub process_ul_element
     my $e = shift;
     my $level = shift;
 
+<<<<<<< HEAD
+=======
+    return unless defined($e);
+
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
     if ($e->tag() eq "ul") {
 
         print TOC '  'x$level;

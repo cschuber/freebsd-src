@@ -83,7 +83,12 @@ struct tls_values {
 
 static HEIMDAL_THREAD_LOCAL struct tls_values values;
 
+<<<<<<< HEAD
 #define DEAD_KEY ((void *)8)
+=======
+static char dead_key[1];
+static void no_dtor(void *d) { (void)d; }
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 
 void
 heim_w32_service_thread_detach(void *unused)
@@ -111,7 +116,11 @@ heim_w32_service_thread_detach(void *unused)
             assert(i < key_defs->keys_start_idx + key_defs->keys_num);
         }
         dtor = key_defs->keys_dtors[i - key_defs->keys_start_idx];
+<<<<<<< HEAD
         if (values.values[i] != NULL && dtor != NULL && dtor != DEAD_KEY)
+=======
+        if (values.values[i] != NULL && dtor != NULL && dtor != no_dtor)
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
             dtor(values.values[i]);
         values.values[i] = NULL;
     }
@@ -150,7 +159,11 @@ heim_w32_key_create(HEIM_PRIV_thread_key *key, void (*dtor)(void *))
 
 #if !defined(WIN32)
     (void) pthread_once(&pt_once, create_pt_key);
+<<<<<<< HEAD
     (void) pthread_setspecific(pt_key, DEAD_KEY);
+=======
+    (void) pthread_setspecific(pt_key, dead_key);
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 #endif
 
     HEIMDAL_MUTEX_lock(&tls_key_defs_lock);
@@ -266,7 +279,11 @@ heim_w32_delete_key(HEIM_PRIV_thread_key key)
     key_lookup(key, &key_defs, &dtor_idx, NULL);
     if (key_defs == NULL)
         return EINVAL;
+<<<<<<< HEAD
     key_defs->keys_dtors[dtor_idx] = DEAD_KEY;
+=======
+    key_defs->keys_dtors[dtor_idx] = no_dtor;
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
     return 0;
 }
 
@@ -279,7 +296,11 @@ heim_w32_setspecific(HEIM_PRIV_thread_key key, void *value)
     size_t i;
 
 #if !defined(WIN32)
+<<<<<<< HEAD
     (void) pthread_setspecific(pt_key, DEAD_KEY);
+=======
+    (void) pthread_setspecific(pt_key, dead_key);
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 #endif
 
     key_lookup(key, NULL, NULL, &dtor);
@@ -304,7 +325,11 @@ heim_w32_setspecific(HEIM_PRIV_thread_key key, void *value)
 
     assert(key < values.values_num);
 
+<<<<<<< HEAD
     if (values.values[key] != NULL && dtor != NULL && dtor != DEAD_KEY)
+=======
+    if (values.values[key] != NULL && dtor != NULL && dtor != no_dtor)
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
         dtor(values.values[key]);
 
     values.values[key] = value;

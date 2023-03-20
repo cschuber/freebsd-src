@@ -120,7 +120,7 @@ static krb5_error_code pac_header_size(krb5_context context,
     uint32_t header_size;
 
     /* Guard against integer overflow on 32-bit systems. */
-    if (num_buffers > 1000) {
+    if (num_buffers > UINT32_MAX / PAC_INFO_BUFFER_SIZE) {
 	ret = EINVAL;
 	krb5_set_error_message(context, ret, "PAC has too many buffers");
 	return ret;

@@ -86,11 +86,19 @@ struct heim_auto_release {
 void *
 heim_retain(void *ptr)
 {
+<<<<<<< HEAD
     struct heim_base *p = PTR2BASE(ptr);
+=======
+    struct heim_base *p;
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 
     if (ptr == NULL || heim_base_is_tagged(ptr))
 	return ptr;
 
+<<<<<<< HEAD
+=======
+    p = PTR2BASE(ptr);
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
     if (p->ref_cnt == heim_base_atomic_max)
 	return ptr;
 
@@ -109,11 +117,19 @@ void
 heim_release(void *ptr)
 {
     heim_base_atomic_type old;
+<<<<<<< HEAD
     struct heim_base *p = PTR2BASE(ptr);
+=======
+    struct heim_base *p;
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 
     if (ptr == NULL || heim_base_is_tagged(ptr))
 	return;
 
+<<<<<<< HEAD
+=======
+    p = PTR2BASE(ptr);
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
     if (p->ref_cnt == heim_base_atomic_max)
 	return;
 
@@ -256,9 +272,18 @@ heim_cmp(heim_object_t a, heim_object_t b)
 static void
 memory_dealloc(void *ptr)
 {
+<<<<<<< HEAD
     struct heim_base_mem *p = (struct heim_base_mem *)PTR2BASE(ptr);
     if (p->dealloc)
 	p->dealloc(ptr);
+=======
+    if (ptr) {
+        struct heim_base_mem *p = (struct heim_base_mem *)PTR2BASE(ptr);
+
+        if (p->dealloc)
+            p->dealloc(ptr);
+    }
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 }
 
 struct heim_type_data memory_object = {
@@ -666,13 +691,24 @@ heim_auto_release_create(void)
 heim_object_t
 heim_auto_release(heim_object_t ptr)
 {
+<<<<<<< HEAD
     struct heim_base *p = PTR2BASE(ptr);
     struct ar_tls *tls = autorel_tls();
+=======
+    struct heim_base *p;
+    struct ar_tls *tls;
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
     heim_auto_release_t ar;
 
     if (ptr == NULL || heim_base_is_tagged(ptr))
 	return ptr;
 
+<<<<<<< HEAD
+=======
+    p = PTR2BASE(ptr);
+    tls = autorel_tls();
+
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
     /* drop from old pool */
     if ((ar = p->autorelpool) != NULL) {
 	HEIMDAL_MUTEX_lock(&ar->pool_mutex);

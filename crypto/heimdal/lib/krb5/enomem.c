@@ -33,6 +33,7 @@
 
 #include "krb5_locl.h"
 
+#undef krb5_enomem
 krb5_error_code
 krb5_enomem(krb5_context context)
 {

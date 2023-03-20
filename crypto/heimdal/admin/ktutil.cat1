@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 KTUTIL(1)                 BSD General Commands Manual                KTUTIL(1)
 
@@ -20,14 +21,44 @@ DDEESSCCRRIIPPTTIIOONN
                  _e_n_c_t_y_p_e] [----eennccttyyppee==_e_n_c_t_y_p_e] [--ww _p_a_s_s_w_o_r_d]
                  [----ppaasssswwoorrdd==_p_a_s_s_w_o_r_d] [--rr] [----rraannddoomm] [--ss] [----nnoo--ssaalltt] [--HH]
                  [----hheexx]
+=======
+KTUTIL(1)                 BSD General Commands Manual                KTUTIL(1)
+
+[1mNAME[0m
+     [1mktutil [22m-- manage Kerberos keytabs
+
+[1mSYNOPSIS[0m
+     [1mktutil [22m[[1m-k [4m[22mkeytab[24m | [1m--keytab=[4m[22mkeytab[24m] [[1m-v [22m| [1m--verbose[22m] [[1m--version[22m]
+            [[1m-h [22m| [1m--help[22m] [4mcommand[24m [[4margs[24m]
+
+[1mDESCRIPTION[0m
+     [1mktutil [22mis a program for managing keytabs.  Supported options:
+
+     [1m-v[22m, [1m--verbose[0m
+             Verbose output.
+
+     [4mcommand[24m can be one of the following:
+
+     add [[1m-p [4m[22mprincipal[24m] [[1m--principal=[4m[22mprincipal[24m] [[1m-V [4m[22mkvno[24m] [[1m--kvno=[4m[22mkvno[24m] [[1m-e[0m
+                 [4menctype[24m] [[1m--enctype=[4m[22menctype[24m] [[1m-w [4m[22mpassword[24m]
+                 [[1m--password=[4m[22mpassword[24m] [[1m-r[22m] [[1m--random[22m] [[1m-s[22m] [[1m--no-salt[22m] [[1m-H[22m]
+                 [[1m--hex[22m]
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
                  Adds a key to the keytab. Options that are not specified will
                  be prompted for. This requires that you know the password or
                  the hex key of the principal to add; if what you really want
                  is to add a new principal to the keytab, you should consider
+<<<<<<< HEAD
                  the _g_e_t command, which talks to the kadmin server.
 
      change [--rr _r_e_a_l_m] [----rreeaallmm==_r_e_a_l_m] [----aa _h_o_s_t] [----aaddmmiinn--sseerrvveerr==_h_o_s_t] [----ss
                  _p_o_r_t] [----sseerrvveerr--ppoorrtt==_p_o_r_t]
+=======
+                 the [4mget[24m command, which talks to the kadmin server.
+
+     change [[1m-r [4m[22mrealm[24m] [[1m--realm=[4m[22mrealm[24m] [[1m--a [4m[22mhost[24m] [[1m--admin-server=[4m[22mhost[24m] [[1m--s[0m
+                 [4mport[24m] [[1m--server-port=[4m[22mport[24m]
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
                  Update one or several keys to new versions.  By default, use
                  the admin server for the realm of a keytab entry.  Otherwise
                  it will use the values specified by the options.
@@ -35,6 +66,7 @@ DDEESSCCRRIIPPTTIIOONN
                  If no principals are given, all the ones in the keytab are
                  updated.
 
+<<<<<<< HEAD
      copy _k_e_y_t_a_b_-_s_r_c _k_e_y_t_a_b_-_d_e_s_t
                  Copies all the entries from _k_e_y_t_a_b_-_s_r_c to _k_e_y_t_a_b_-_d_e_s_t.
 
@@ -66,6 +98,39 @@ DDEESSCCRRIIPPTTIIOONN
                  version that is at least _a_g_e (default one week) old.
 
 SSEEEE AALLSSOO
+=======
+     copy [4mkeytab-src[24m [4mkeytab-dest[0m
+                 Copies all the entries from [4mkeytab-src[24m to [4mkeytab-dest[24m.
+
+     get [[1m-p [4m[22madmin[24m [4mprincipal[24m] [[1m--principal=[4m[22madmin[24m [4mprincipal[24m] [[1m-e [4m[22menctype[24m]
+                 [[1m--enctypes=[4m[22menctype[24m] [[1m-r [4m[22mrealm[24m] [[1m--realm=[4m[22mrealm[24m] [[1m-a [4m[22madmin[0m
+                 [4mserver[24m] [[1m--admin-server=[4m[22madmin[24m [4mserver[24m] [[1m-s [4m[22mserver[24m [4mport[24m]
+                 [[1m--server-port=[4m[22mserver[24m [4mport[24m] [4mprincipal[24m [4m...[0m
+                 For each [4mprincipal[24m, generate a new key for it (creating it if
+                 it doesn't already exist), and put that key in the keytab.
+
+                 If no [4mrealm[24m is specified, the realm to operate on is taken
+                 from the first principal.
+
+     list [[1m--keys[22m] [[1m--timestamp[22m]
+                 List the keys stored in the keytab.
+
+     remove [[1m-p [4m[22mprincipal[24m] [[1m--principal=[4m[22mprincipal[24m] [[1m-V -kvno[22m] [[1m--kvno=[4m[22mkvno[24m]
+                 [[1m-e -enctype[22m] [[1m--enctype=[4m[22menctype[24m]
+                 Removes the specified key or keys. Not specifying a [4mkvno[24m re-
+                 moves keys with any version number. Not specifying an [4menctype[0m
+                 removes keys of any type.
+
+     rename [4mfrom-principal[24m [4mto-principal[0m
+                 Renames all entries in the keytab that match the
+                 [4mfrom-principal[24m to [4mto-principal[24m.
+
+     purge [[1m--age=[4m[22mage[24m]
+                 Removes all old versions of a key for which there is a newer
+                 version that is at least [4mage[24m (default one week) old.
+
+[1mSEE ALSO[0m
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
      kadmin(1)
 
 HEIMDAL                         April 14, 2005                         HEIMDAL

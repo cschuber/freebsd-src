@@ -37,7 +37,10 @@
 #define HEIM_EVP_OSSL_H 1
 
 /* symbol renaming */
+<<<<<<< HEAD
 #define EVP_ossl_md2 hc_EVP_ossl_md2
+=======
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 #define EVP_ossl_md4 hc_EVP_ossl_md4
 #define EVP_ossl_md5 hc_EVP_ossl_md5
 #define EVP_ossl_sha1 hc_EVP_ossl_sha1
@@ -67,7 +70,10 @@
 
 HC_CPP_BEGIN
 
+<<<<<<< HEAD
 const hc_EVP_MD * hc_EVP_ossl_md2(void);
+=======
+>>>>>>> 6f4e10db3298f6d65e1e646fe52aaafc3682b788
 const hc_EVP_MD * hc_EVP_ossl_md4(void);
 const hc_EVP_MD * hc_EVP_ossl_md5(void);
 const hc_EVP_MD * hc_EVP_ossl_sha1(void);
