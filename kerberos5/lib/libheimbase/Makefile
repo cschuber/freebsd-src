@@ -22,4 +22,4 @@ CFLAGS+=	-I${KRB5DIR}/include
 
 .include <bsd.lib.mk>
 
-.PATH: ${KRB5DIR}/base
+.PATH: ${KRB5DIR}/lib/base
