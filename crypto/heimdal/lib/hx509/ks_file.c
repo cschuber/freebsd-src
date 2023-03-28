@@ -52,12 +52,16 @@ parse_certificate(hx509_context context, const char *fn,
 		  const void *data, size_t len,
 		  const AlgorithmIdentifier *ai)
 {
+    heim_error_t error = NULL;
     hx509_cert cert;
     int ret;
 
-    ret = hx509_cert_init_data(context, data, len, &cert);
-    if (ret)
+    cert = hx509_cert_init_data(context, data, len, &error);
+    if (cert == NULL) {
+	ret = heim_error_get_code(error);
+	heim_release(error);
 	return ret;
+    }
 
     ret = _hx509_collector_certs_add(context, c, cert);
     hx509_cert_free(cert);
@@ -92,9 +96,10 @@ try_decrypt(hx509_context context,
 			 password, passwordlen,
 			 1, key, NULL);
     if (ret <= 0) {
-	hx509_set_error_string(context, 0, HX509_CRYPTO_INTERNAL_ERROR,
+	ret = HX509_CRYPTO_INTERNAL_ERROR;
+	hx509_set_error_string(context, 0, ret,
 			       "Failed to do string2key for private key");
-	return HX509_CRYPTO_INTERNAL_ERROR;
+        goto out;
     }
 
     clear.data = malloc(len);
@@ -128,10 +133,10 @@ try_decrypt(hx509_context context,
 					   &clear,
 					   NULL);
 
-    memset(clear.data, 0, clear.length);
-out:
+    memset_s(clear.data, clear.length, 0, clear.length);
     free(clear.data);
-    memset(key, 0, keylen);
+out:
+    memset_s(key, keylen, 0, keylen);
     free(key);
     return ret;
 }
@@ -294,7 +299,7 @@ parse_pem_private_key(hx509_context context, const char *fn,
 		ret = try_decrypt(context, c, ai, cipher, ivdata, password,
 				  strlen(password), data, len);
 	    /* XXX add password to lock password collection ? */
-	    memset(password, 0, sizeof(password));
+	    memset_s(password, sizeof(password), 0, sizeof(password));
 	}
 	free(ivdata);
 
@@ -322,7 +327,9 @@ struct pem_formats {
     { "CERTIFICATE", parse_certificate, NULL },
     { "PRIVATE KEY", parse_pkcs8_private_key, NULL },
     { "RSA PRIVATE KEY", parse_pem_private_key, hx509_signature_rsa },
+#ifdef HAVE_HCRYPTO_W_OPENSSL
     { "EC PRIVATE KEY", parse_pem_private_key, hx509_signature_ecPublicKey }
+#endif
 };
 
 

@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (c) 2009, Secure Endpoints Inc.
+ * Copyright (c) 2010, Secure Endpoints Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,12 +29,8 @@
  *
  **********************************************************************/
 
-#include<windows.h>
+#define RC_FILE_TYPE VFT_APP
+#define RC_FILE_DESC_0409 "Ticket tool"
+#define RC_FILE_ORIG_0409 "heimtools.exe"
 
-BOOL WINAPI
-DllMain(__in  HINSTANCE hinstDLL,
-	__in  DWORD fdwReason,
-	__in  LPVOID lpvReserved)
-{
-    return TRUE;
-}
+#include "../windows/version.rc"

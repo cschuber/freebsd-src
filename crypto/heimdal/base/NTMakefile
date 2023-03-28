@@ -29,25 +29,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-RELDIR=base
+RELDIR=packages
+SUBDIRS=windows
 
 !include ../windows/NTMakefile.w32
 
-INCFILES=$(INCDIR)\heimbase.h
-
-libheimbase_OBJS =		\
-	$(OBJ)\array.obj	\
-	$(OBJ)\bool.obj		\
-	$(OBJ)\dict.obj		\
-	$(OBJ)\heimbase.obj	\
-	$(OBJ)\null.obj		\
-	$(OBJ)\number.obj	\
-	$(OBJ)\string.obj
-
-$(LIBHEIMBASE): $(libheimbase_OBJS)
-	$(LIBCON)
-
-all:: $(INCFILES) $(LIBHEIMBASE)
-
-clean::
-	-$(RM) $(INCFILES)
