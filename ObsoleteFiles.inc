@@ -52,6 +52,9 @@
 #   xargs -n1 | sort | uniq -d;
 # done
 
+# NNNNNNNN: Heimdal updated to 7.8.0
+OLD_FILES+=usr/bin/kcc
+
 # 20230626: Only install sys/dev/nvme/nvme.h to /usr/include
 OLD_FILES+=usr/include/dev/nvme/nvme_private.h
 

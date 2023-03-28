@@ -32,7 +32,7 @@
 .\" $Id$
 .\"
 .Dd Feb  22, 2007
-.Dt KADMIN 8
+.Dt KADMIN 1
 .Os HEIMDAL
 .Sh NAME
 .Nm kadmin
@@ -110,10 +110,13 @@ Commands include:
 .Op Fl Fl attributes= Ns Ar attributes
 .Op Fl Fl expiration-time= Ns Ar time
 .Op Fl Fl pw-expiration-time= Ns Ar time
+.Op Fl Fl policy= Ns Ar policy-name
 .Ar principal...
 .Bd -ragged -offset indent
 Adds a new principal to the database. The options not passed on the
 command line will be promped for.
+The only policy supported by Heimdal servers is
+.Ql default .
 .Ed
 .Pp
 .Nm add_enctype
@@ -146,7 +149,9 @@ enctypes.
 .Oc
 .Ar principal...
 .Bd -ragged -offset indent
-Creates a keytab with the keys of the specified principals.
+Creates a keytab with the keys of the specified principals.  Requires
+get-keys rights, otherwise the principal's keys are changed and saved in
+the keytab.
 .Ed
 .Pp
 .Nm get
@@ -200,11 +205,15 @@ and
 .Op Fl Fl expiration-time= Ns Ar time
 .Op Fl Fl pw-expiration-time= Ns Ar time
 .Op Fl Fl kvno= Ns Ar number
+.Op Fl Fl policy= Ns Ar policy-name
 .Ar principal...
 .Bd -ragged -offset indent
 Modifies certain attributes of a principal. If run without command
 line options, you will be prompted. With command line options, it will
 only change the ones specified.
+.Pp
+Only policy supported by Heimdal is
+.Ql default .
 .Pp
 Possible attributes are:
 .Li new-princ ,
@@ -228,6 +237,7 @@ kadmin -l modify -a -disallow-proxiable user
 .Ed
 .Pp
 .Nm passwd
+.Op Fl Fl keepold
 .Op Fl r | Fl Fl random-key
 .Op Fl Fl random-password
 .Oo Fl p Ar string \*(Ba Xo
@@ -240,7 +250,7 @@ kadmin -l modify -a -disallow-proxiable user
 Changes the password of an existing principal.
 .Ed
 .Pp
-.Nm password-quality
+.Nm verify-password-quality
 .Ar principal
 .Ar password
 .Bd -ragged -offset indent
@@ -248,7 +258,13 @@ Run the password quality check function locally.
 You can run this on the host that is configured to run the kadmind
 process to verify that your configuration file is correct.
 The verification is done locally, if kadmin is run in remote mode,
-no rpc call is done to the server.
+no rpc call is done to the server. NOTE: if the environment has
+verify-password-quality configured to use a back-end that stores
+password history (such as heimdal-history), running
+verify-quality-password will cause an update to the password
+database meaning that merely verifying the quality of the password
+using verify-quality-password invalidates the use of that
+principal/password in the future.
 .Ed
 .Pp
 .Nm privileges
@@ -260,6 +276,7 @@ Lists the operations you are allowed to perform. These include
 .Li delete ,
 .Li del_enctype ,
 .Li get ,
+.Li get-keys ,
 .Li list ,
 and
 .Li modify .
@@ -286,14 +303,18 @@ When running in local mode, the following commands can also be used:
 .Pp
 .Nm dump
 .Op Fl d | Fl Fl decrypt
+.Op Fl f Ns Ar format | Fl Fl format= Ns Ar format
 .Op Ar dump-file
 .Bd -ragged -offset indent
 Writes the database in
-.Dq human readable
+.Dq machine readable text
 form to the specified file, or standard out. If the database is
 encrypted, the dump will also have encrypted keys, unless
 .Fl Fl decrypt
-is used.
+is used.  If
+.Fl Fl format=MIT
+is used then the dump will be in MIT format.  Otherwise it will be in
+Heimdal format.
 .Ed
 .Pp
 .Nm init

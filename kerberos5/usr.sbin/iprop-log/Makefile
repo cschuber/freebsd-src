@@ -9,6 +9,7 @@ CFLAGS+=	-I${KRB5DIR}/lib/kadm5 \
 		-I${KRB5DIR}/lib/krb5 \
 		-I${KRB5DIR}/lib/roken \
 		-I${KRB5DIR}/lib/sl \
+		-I${KRB5DIR}/lib \
 		-I.
 LIBADD=	kadm5srv hdb krb5 roken edit sl vers
 LDFLAGS=${LDAPLDFLAGS}

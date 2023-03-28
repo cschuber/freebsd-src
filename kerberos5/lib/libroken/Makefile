@@ -15,33 +15,28 @@ INCS=	roken.h \
 	parse_units.h \
 	resolve.h \
 	rtbl.h \
+	socket_wrapper.h \
 	xdbm.h
 
 SRCS=	base64.c \
-	copyhostent.c \
-	ecalloc.c \
-	emalloc.c \
-	erealloc.c \
-	estrdup.c \
-	strlwr.c \
-	strsep_copy.c \
-	strupr.c \
 	bswap.c \
-	cloexec.c \
 	concat.c \
+	cloexec.c \
 	ct.c \
+	detach.c \
 	doxygen.c \
 	dumpdata.c \
 	environment.c \
 	eread.c \
 	esetenv.c \
 	ewrite.c \
+	getaddrinfo_hostspec.c \
 	get_default_username.c \
 	get_window_size.c \
-	getaddrinfo_hostspec.c \
 	getarg.c \
 	getnameinfo_verified.c \
 	getprogname.c \
+	getxxyyy.c \
 	h_errno.c \
 	hex.c \
 	hostent_find_fqdn.c \
@@ -49,15 +44,16 @@ SRCS=	base64.c \
 	k_getpwnam.c \
 	k_getpwuid.c \
 	mini_inetd.c \
+	mkdir.c \
 	net_read.c \
 	net_write.c \
 	parse_bytes.c \
 	parse_time.c \
 	parse_units.c \
+	qsort.c \
 	rand.c \
 	realloc.c \
 	resolve.c \
-	roken.h \
 	roken_gethostby.c \
 	rtbl.c \
 	setprogname.c \
@@ -65,6 +61,7 @@ SRCS=	base64.c \
 	simple_exec.c \
 	snprintf.c \
 	socket.c \
+	socket_wrapper.c \
 	strcollect.c \
 	strerror_r.c \
 	strpool.c \
@@ -75,14 +72,32 @@ SRCS=	base64.c \
 	vis.c \
 	warnerr.c \
 	write_pid.c \
-	xfree.c
+	xfree.c \
+	${DIST_COMMON} \
+	${GEN:S/.hin$/.h/}
+
+DIST_COMMON= \
+	ecalloc.c \
+	emalloc.c \
+	erealloc.c \
+	estrdup.c \
+	strlwr.c \
+	strsep_copy.c \
+	strupr.c
+
+GEN=	make_roken.c
 
 CFLAGS+=-I${KRB5DIR}/lib/roken -I.
 
-CLEANFILES= roken.h
+CLEANFILES= roken.h \
+	make_roken.c \
+	${GEN:S/.hin$/.h/}
 
-roken.h:
+roken.h: ${MAKE_ROKEN}
 	${MAKE_ROKEN} > ${.TARGET}
+
+make_roken.c: roken.h.in roken.awk
+	awk -f ${KRB5DIR}/lib/roken/roken.awk ${KRB5DIR}/lib/roken/roken.h.in > make_roken.c
 
 .include <bsd.lib.mk>
 

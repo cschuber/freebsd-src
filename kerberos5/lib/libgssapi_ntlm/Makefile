@@ -4,7 +4,7 @@ PACKAGE=	kerberos-lib
 
 LIB=	gssapi_ntlm
 LDFLAGS= -Wl,-Bsymbolic -Wl,--no-undefined
-LIBADD=	crypto gssapi krb5 heimntlm roken
+LIBADD=	hcrypto crypto gssapi krb5 heimntlm heimbase roken
 SHLIB_MAJOR=	10
 
 SRCS=	accept_sec_context.c \
@@ -42,10 +42,12 @@ SRCS=	accept_sec_context.c \
 CFLAGS+=-I${KRB5DIR}/lib/gssapi
 CFLAGS+=-I${KRB5DIR}/lib/gssapi/gssapi
 CFLAGS+=-I${KRB5DIR}/lib/gssapi/ntlm
+CFLAGS+=-I${KRB5DIR}/lib/gssapi/mech
 CFLAGS+=-I${KRB5DIR}/lib/krb5
 CFLAGS+=-I${KRB5DIR}/lib/ntlm
-CFLAGS+=-DOPENSSL_API_COMPAT=0x10100000L
+CFLAGS+=-I${KRB5DIR}/lib
+CFLAGS+=-I${.OBJDIR:H}/libgssapi_mech
 
 .include <bsd.lib.mk>
 
-.PATH: ${KRB5DIR}/lib/gssapi/ntlm ${SRCTOP}/lib/libgssapi ${.CURDIR:H}/libgssapi_krb5
+.PATH: ${KRB5DIR}/lib/gssapi/ntlm ${KRB5DIR}/lib/gssapi/mech ${SRCTOP}/lib/libgssapi ${.CURDIR:H}/libgssapi_krb5

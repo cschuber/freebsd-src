@@ -4,10 +4,11 @@ PACKAGE=	kerberos-lib
 
 LIB=	heimntlm
 LDFLAGS=	-Wl,--no-undefined
-LIBADD=	crypto com_err krb5 roken
+LIBADD=	hcrypto crypto com_err krb5 roken wind
 SRCS=	ntlm.c ntlm_err.c ntlm_err.h
 INCS=	heimntlm.h heimntlm-protos.h ntlm_err.h
 CFLAGS+=-I${KRB5DIR}/lib/ntlm -I${KRB5DIR}/lib/roken \
+	-I${KRB5DIR}/lib \
 	-I${SRCTOP}/contrib/com_err
 CFLAGS+=-DOPENSSL_API_COMPAT=0x10100000L
 VERSION_MAP= ${KRB5DIR}/lib/ntlm/version-script.map
