@@ -2,6 +2,6 @@
 
 include $(top_srcdir)/Makefile.am.common
 
-SUBDIRS = common ftp ftpd
+SUBDIRS=  mac
 
-EXTRA_DIST = NTMakefile
+EXTRA_DIST = windows NTMakefile

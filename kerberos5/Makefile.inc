@@ -7,6 +7,7 @@ NO_LINT=
 KRB5DIR=	${SRCTOP}/crypto/heimdal
 
 CFLAGS+=	-DHAVE_CONFIG_H -I${.CURDIR:H:H}/include
+CFLAGS+=	-DBUILD_ROKEN_LIB
 
 WARNS?=		1
 CWARNFLAGS.clang+=	-Wno-absolute-value

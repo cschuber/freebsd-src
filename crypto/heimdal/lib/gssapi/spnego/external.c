@@ -67,11 +67,19 @@ static gss_mo_desc spnego_mo[] = {
     },
     {
 	GSS_C_MA_MECH_NEGO,
-	GSS_MO_MA
+	GSS_MO_MA,
+	NULL,
+	NULL,
+	NULL,
+	NULL
     },
     {
 	GSS_C_MA_MECH_PSEUDO,
-	GSS_MO_MA
+	GSS_MO_MA,
+	NULL,
+	NULL,
+	NULL,
+	NULL
     }
 };
 #endif
@@ -86,7 +94,7 @@ static gssapi_mech_interface_desc spnego_mech = {
     _gss_spnego_init_sec_context,
     _gss_spnego_accept_sec_context,
     _gss_spnego_process_context_token,
-    _gss_spnego_internal_delete_sec_context,
+    _gss_spnego_delete_sec_context,
     _gss_spnego_context_time,
     _gss_spnego_get_mic,
     _gss_spnego_verify_mic,
@@ -146,6 +154,9 @@ static gssapi_mech_interface_desc spnego_mech = {
     NULL,
     0,
 #endif
+    NULL,
+    NULL,
+    NULL,
     NULL,
     NULL,
     NULL,

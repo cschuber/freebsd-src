@@ -30,6 +30,7 @@
 
 #include <unistd.h>
 #include <sys/queue.h>
+#include <mechqueue.h>
 
 typedef OM_uint32 _gss_acquire_cred_t
 	      (OM_uint32 *,            /* minor_status */

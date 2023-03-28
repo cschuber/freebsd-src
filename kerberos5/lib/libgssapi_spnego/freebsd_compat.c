@@ -29,7 +29,13 @@
  */
 
 #include <gssapi/gssapi.h>
+#include <mechqueue.h>
 #include <mech_switch.h>
+
+/*
+ * XXX src/lib/libgssapi/mech_switch.h missing the following
+ */
+extern void _gss_mg_collect_error(gss_OID mech, OM_uint32 maj, OM_uint32 min);
 
 gss_OID_desc __gss_c_nt_hostbased_service_oid_desc =
     {10, (void *)("\x2a\x86\x48\x86\xf7\x12" "\x01\x02\x01\x04")};

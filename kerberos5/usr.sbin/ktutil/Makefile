@@ -18,8 +18,8 @@ SRCS=	add.c \
 	remove.c \
 	rename.c
 
-CFLAGS+=-I${KRB5DIR}/lib/roken -I${KRB5DIR}/lib/sl -I.
-LIBADD=	kadm5clnt krb5 roken crypto edit sl vers
+CFLAGS+=-I${KRB5DIR}/lib/roken -I${KRB5DIR}/lib/sl -I${KRB5DIR}/lib -I.
+LIBADD=	kadm5clnt krb5 roken hcrypto crypto edit sl vers
 
 CLEANFILES=	ktutil-commands.h ktutil-commands.c
 

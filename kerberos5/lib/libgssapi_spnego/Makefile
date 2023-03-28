@@ -32,9 +32,13 @@ GEN=	asn1_ContextFlags.x \
 CFLAGS+=-I${KRB5DIR}/lib/gssapi
 CFLAGS+=-I${KRB5DIR}/lib/gssapi/gssapi
 CFLAGS+=-I${KRB5DIR}/lib/gssapi/spnego
+CFLAGS+=-I${KRB5DIR}/lib/gssapi/mech
 CFLAGS+=-I${KRB5DIR}/lib/asn1
+CFLAGS+=-I${KRB5DIR}/lib
 CFLAGS+=-I${SRCTOP}/lib/libgssapi
-CFLAGS+=-I${KRB5DIR}/lib/roken -I.
+CFLAGS+=-I${KRB5DIR}/lib/roken
+CFLAGS+=-I${.OBJDIR:H}/libgssapi_mech
+CFLAGS+=-I.
 
 CLEANFILES=	${GEN} ${GEN:S/.x$/.c/:S/.hx$/.h/} \
 		spnego_asn1_files spnego_asn1-template.c
@@ -57,4 +61,4 @@ ${GEN}: spnego.asn1 spnego.opt
 
 .SUFFIXES: .h .c .x .hx
 
-.PATH: ${KRB5DIR}/lib/gssapi/spnego ${SRCTOP}/lib/libgssapi ${.CURDIR:H}/libgssapi_krb5
+.PATH: ${KRB5DIR}/lib/gssapi/spnego ${KRB5DIR}/lib/gssapi/mech ${SRCTOP}/lib/libgssapi ${.CURDIR:H}/libgssapi_krb5
