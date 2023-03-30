@@ -127,7 +127,7 @@ ARCFOUR_subencrypt(krb5_context context,
 		   unsigned usage,
 		   void *ivec)
 {
-    EVP_CIPHER_CTX *ctx;
+    EVP_CIPHER_CTX ctx;
     struct _krb5_checksum_type *c = _krb5_find_checksum (CKSUMTYPE_RSA_MD5);
     Checksum k1_c, k2_c, k3_c, cksum;
     struct _krb5_key_data ke;
@@ -174,13 +174,11 @@ ARCFOUR_subencrypt(krb5_context context,
     if (ret)
 	krb5_abortx(context, "hmac failed");
 
-    ctx = EVP_CIPHER_CTX_new();
-    if (ctx == NULL)
-	krb5_abortx(context, "malloc failed");
+    EVP_CIPHER_CTX_init(&ctx);
 
-    EVP_CipherInit_ex(ctx, EVP_rc4(), NULL, k3_c.checksum.data, NULL, 1);
-    EVP_Cipher(ctx, cdata + 16, cdata + 16, len - 16);
-    EVP_CIPHER_CTX_free(ctx);
+    EVP_CipherInit_ex(&ctx, EVP_rc4(), NULL, k3_c.checksum.data, NULL, 1);
+    EVP_Cipher(&ctx, cdata + 16, cdata + 16, len - 16);
+    EVP_CIPHER_CTX_cleanup(&ctx);
 
     memset_s(k1_c_data, sizeof(k1_c_data), 0, sizeof(k1_c_data));
     memset_s(k2_c_data, sizeof(k2_c_data), 0, sizeof(k2_c_data));
@@ -196,7 +194,7 @@ ARCFOUR_subdecrypt(krb5_context context,
 		   unsigned usage,
 		   void *ivec)
 {
-    EVP_CIPHER_CTX *ctx;
+    EVP_CIPHER_CTX ctx;
     struct _krb5_checksum_type *c = _krb5_find_checksum (CKSUMTYPE_RSA_MD5);
     Checksum k1_c, k2_c, k3_c, cksum;
     struct _krb5_key_data ke;
@@ -234,12 +232,10 @@ ARCFOUR_subdecrypt(krb5_context context,
     if (ret)
 	krb5_abortx(context, "hmac failed");
 
-    ctx = EVP_CIPHER_CTX_new();
-    if (ctx == NULL)
-	krb5_abortx(context, "malloc failed");
-    EVP_CipherInit_ex(ctx, EVP_rc4(), NULL, k3_c.checksum.data, NULL, 0);
-    EVP_Cipher(ctx, cdata + 16, cdata + 16, len - 16);
-    EVP_CIPHER_CTX_free(ctx);
+    EVP_CIPHER_CTX_init(&ctx);
+    EVP_CipherInit_ex(&ctx, EVP_rc4(), NULL, k3_c.checksum.data, NULL, 0);
+    EVP_Cipher(&ctx, cdata + 16, cdata + 16, len - 16);
+    EVP_CIPHER_CTX_cleanup(&ctx);
 
     ke.key = &kb;
     kb.keyvalue = k2_c.checksum;

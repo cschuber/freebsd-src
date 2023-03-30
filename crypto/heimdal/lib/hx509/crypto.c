@@ -128,8 +128,7 @@ heim_int2BN(const heim_integer *i)
     BIGNUM *bn;
 
     bn = BN_bin2bn(i->data, i->length, NULL);
-    if (bn != NULL)
-	    BN_set_negative(bn, i->negative);
+    BN_set_negative(bn, i->negative);
     return bn;
 }
 
@@ -550,15 +549,12 @@ rsa_get_internal(hx509_context context,
 		 hx509_private_key key,
 		 const char *type)
 {
-    const BIGNUM *n;
-
     if (strcasecmp(type, "rsa-modulus") == 0) {
-	RSA_get0_key(key->private_key.rsa, &n, NULL, NULL);
+	return BN_dup(key->private_key.rsa->n);
     } else if (strcasecmp(type, "rsa-exponent") == 0) {
-	RSA_get0_key(key->private_key.rsa, NULL, &n, NULL);
+	return BN_dup(key->private_key.rsa->e);
     } else
 	return NULL;
-    return BN_dup(n);
 }
 
 
@@ -590,7 +586,6 @@ dsa_verify_signature(hx509_context context,
     DSAPublicKey pk;
     DSAParams param;
     size_t size;
-    BIGNUM *key, *p, *q, *g;
     DSA *dsa;
     int ret;
 
@@ -608,22 +603,13 @@ dsa_verify_signature(hx509_context context,
     if (ret)
 	goto out;
 
-    key = heim_int2BN(&pk);
+    dsa->pub_key = heim_int2BN(&pk);
 
     free_DSAPublicKey(&pk);
 
-    if (key == NULL) {
+    if (dsa->pub_key == NULL) {
 	ret = ENOMEM;
 	hx509_set_error_string(context, 0, ret, "out of memory");
-	goto out;
-    }
-
-    ret = DSA_set0_key(dsa, key, NULL);
-
-    if (ret != 1) {
-	BN_free(key);
-	ret = EINVAL;
-	hx509_set_error_string(context, 0, ret, "failed to set DSA key");
 	goto out;
     }
 
@@ -642,29 +628,15 @@ dsa_verify_signature(hx509_context context,
 	goto out;
     }
 
-    p = heim_int2BN(&param.p);
-    q = heim_int2BN(&param.q);
-    g = heim_int2BN(&param.g);
+    dsa->p = heim_int2BN(&param.p);
+    dsa->q = heim_int2BN(&param.q);
+    dsa->g = heim_int2BN(&param.g);
 
     free_DSAParams(&param);
 
-    if (p == NULL || q == NULL || g == NULL) {
-	BN_free(p);
-	BN_free(q);
-	BN_free(g);
+    if (dsa->p == NULL || dsa->q == NULL || dsa->g == NULL) {
 	ret = ENOMEM;
 	hx509_set_error_string(context, 0, ret, "out of memory");
-	goto out;
-    }
-
-    ret = DSA_set0_pqg(dsa, p, q, g);
-
-    if (ret != 1) {
-	BN_free(p);
-	BN_free(q);
-	BN_free(g);
-	ret = EINVAL;
-	hx509_set_error_string(context, 0, ret, "failed to set DSA parameters");
 	goto out;
     }
 
@@ -2095,7 +2067,7 @@ hx509_crypto_encrypt(hx509_crypto crypto,
 		     const heim_octet_string *ivec,
 		     heim_octet_string **ciphertext)
 {
-    EVP_CIPHER_CTX *evp;
+    EVP_CIPHER_CTX evp;
     size_t padsize, bsize;
     int ret;
 
@@ -2107,13 +2079,12 @@ hx509_crypto_encrypt(hx509_crypto crypto,
 
     assert(EVP_CIPHER_iv_length(crypto->c) == (int)ivec->length);
 
-    evp = EVP_CIPHER_CTX_new();
-    if (evp == NULL)
-	return ENOMEM;
+    EVP_CIPHER_CTX_init(&evp);
 
-    ret = EVP_CipherInit_ex(evp, crypto->c, NULL,
+    ret = EVP_CipherInit_ex(&evp, crypto->c, NULL,
 			    crypto->key.data, ivec->data, 1);
     if (ret != 1) {
+	EVP_CIPHER_CTX_cleanup(&evp);
 	ret = HX509_CRYPTO_INTERNAL_ERROR;
 	goto out;
     }
@@ -2153,7 +2124,7 @@ hx509_crypto_encrypt(hx509_crypto crypto,
 	    *p++ = padsize;
     }
 
-    ret = EVP_Cipher(evp, (*ciphertext)->data,
+    ret = EVP_Cipher(&evp, (*ciphertext)->data,
 		     (*ciphertext)->data,
 		     length + padsize);
     if (ret != 1) {
@@ -2172,7 +2143,7 @@ hx509_crypto_encrypt(hx509_crypto crypto,
 	    *ciphertext = NULL;
 	}
     }
-    EVP_CIPHER_CTX_free(evp);
+    EVP_CIPHER_CTX_cleanup(&evp);
 
     return ret;
 }
@@ -2184,7 +2155,7 @@ hx509_crypto_decrypt(hx509_crypto crypto,
 		     heim_octet_string *ivec,
 		     heim_octet_string *clear)
 {
-    EVP_CIPHER_CTX *evp;
+    EVP_CIPHER_CTX evp;
     void *idata = NULL;
     int ret;
 
@@ -2204,30 +2175,27 @@ hx509_crypto_decrypt(hx509_crypto crypto,
     if (ivec)
 	idata = ivec->data;
 
-    evp = EVP_CIPHER_CTX_new();
-    if (evp == NULL)
-	return ENOMEM;
+    EVP_CIPHER_CTX_init(&evp);
 
-    ret = EVP_CipherInit_ex(evp, crypto->c, NULL,
+    ret = EVP_CipherInit_ex(&evp, crypto->c, NULL,
 			    crypto->key.data, idata, 0);
     if (ret != 1) {
-	EVP_CIPHER_CTX_free(evp);
+	EVP_CIPHER_CTX_cleanup(&evp);
 	return HX509_CRYPTO_INTERNAL_ERROR;
     }
 
     clear->length = length;
     clear->data = malloc(length);
     if (clear->data == NULL) {
-	EVP_CIPHER_CTX_free(evp);
+	EVP_CIPHER_CTX_cleanup(&evp);
 	clear->length = 0;
 	return ENOMEM;
     }
 
-    if (EVP_Cipher(evp, clear->data, data, length) != 1) {
-	EVP_CIPHER_CTX_free(evp);
+    if (EVP_Cipher(&evp, clear->data, data, length) != 1) {
 	return HX509_CRYPTO_INTERNAL_ERROR;
     }
-    EVP_CIPHER_CTX_free(evp);
+    EVP_CIPHER_CTX_cleanup(&evp);
 
     if ((crypto->flags & PADDING_PKCS7) && EVP_CIPHER_block_size(crypto->c) > 1) {
 	int padsize;
@@ -2506,8 +2474,6 @@ match_keys_rsa(hx509_cert c, hx509_private_key private_key)
     const SubjectPublicKeyInfo *spi;
     RSAPublicKey pk;
     RSA *rsa;
-    const BIGNUM *d, *p, *q, *dmp1, *dmq1, *iqmp;
-    BIGNUM *new_d, *new_p, *new_q, *new_dmp1, *new_dmq1, *new_iqmp, *n, *e;
     size_t size;
     int ret;
 
@@ -2515,10 +2481,7 @@ match_keys_rsa(hx509_cert c, hx509_private_key private_key)
 	return 0;
 
     rsa = private_key->private_key.rsa;
-    RSA_get0_key(rsa, NULL, NULL, &d);
-    RSA_get0_factors(rsa, &p, &q);
-    RSA_get0_crt_params(rsa, &dmp1, &dmq1, &iqmp);
-    if (d == NULL || p == NULL || q == NULL)
+    if (rsa->d == NULL || rsa->p == NULL || rsa->q == NULL)
 	return 0;
 
     cert = _hx509_get_cert(c);
@@ -2535,66 +2498,21 @@ match_keys_rsa(hx509_cert c, hx509_private_key private_key)
 	RSA_free(rsa);
 	return 0;
     }
-    n = heim_int2BN(&pk.modulus);
-    e = heim_int2BN(&pk.publicExponent);
+    rsa->n = heim_int2BN(&pk.modulus);
+    rsa->e = heim_int2BN(&pk.publicExponent);
 
     free_RSAPublicKey(&pk);
 
-    new_d = BN_dup(d);
-    new_p = BN_dup(p);
-    new_q = BN_dup(q);
-    new_dmp1 = BN_dup(dmp1);
-    new_dmq1 = BN_dup(dmq1);
-    new_iqmp = BN_dup(iqmp);
+    rsa->d = BN_dup(private_key->private_key.rsa->d);
+    rsa->p = BN_dup(private_key->private_key.rsa->p);
+    rsa->q = BN_dup(private_key->private_key.rsa->q);
+    rsa->dmp1 = BN_dup(private_key->private_key.rsa->dmp1);
+    rsa->dmq1 = BN_dup(private_key->private_key.rsa->dmq1);
+    rsa->iqmp = BN_dup(private_key->private_key.rsa->iqmp);
 
-    if (n == NULL || e == NULL ||
-	new_d == NULL || new_p == NULL|| new_q == NULL ||
-	new_dmp1 == NULL || new_dmq1 == NULL || new_iqmp == NULL) {
-	BN_free(n);
-	BN_free(e);
-	BN_free(new_d);
-	BN_free(new_p);
-	BN_free(new_q);
-	BN_free(new_dmp1);
-	BN_free(new_dmq1);
-	BN_free(new_iqmp);
-	RSA_free(rsa);
-	return 0;
-    }
-
-    ret = RSA_set0_key(rsa, new_d, n, e);
-
-    if (ret != 1) {
-	BN_free(n);
-	BN_free(e);
-	BN_free(new_d);
-	BN_free(new_p);
-	BN_free(new_q);
-	BN_free(new_dmp1);
-	BN_free(new_dmq1);
-	BN_free(new_iqmp);
-	RSA_free(rsa);
-	return 0;
-    }
-
-    ret = RSA_set0_factors(rsa, new_p, new_q);
-
-    if (ret != 1) {
-	BN_free(new_p);
-	BN_free(new_q);
-	BN_free(new_dmp1);
-	BN_free(new_dmq1);
-	BN_free(new_iqmp);
-	RSA_free(rsa);
-	return 0;
-    }
-
-    ret = RSA_set0_crt_params(rsa, new_dmp1, new_dmq1, new_iqmp);
-
-    if (ret != 1) {
-	BN_free(new_dmp1);
-	BN_free(new_dmq1);
-	BN_free(new_iqmp);
+    if (rsa->n == NULL || rsa->e == NULL ||
+	rsa->d == NULL || rsa->p == NULL|| rsa->q == NULL ||
+	rsa->dmp1 == NULL || rsa->dmq1 == NULL) {
 	RSA_free(rsa);
 	return 0;
     }

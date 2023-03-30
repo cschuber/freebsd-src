@@ -627,8 +627,6 @@ collect_private_key(hx509_context context,
     hx509_private_key key;
     heim_octet_string localKeyId;
     int ret;
-    const RSA_METHOD *meth;
-    BIGNUM *n, *e;
     RSA *rsa;
     struct p11_rsa *p11rsa;
 
@@ -648,15 +646,8 @@ collect_private_key(hx509_context context,
      * the pkcs11 specification, but some smartcards leaves it out,
      * let ignore any failure to fetch it.
      */
-    n = getattr_bn(p, slot, session, object, CKA_MODULUS);
-    e = getattr_bn(p, slot, session, object, CKA_PUBLIC_EXPONENT);
-    if (RSA_set0_key(rsa, n, e, NULL) != 1) {
-	BN_free(n);
-	BN_free(e);
-	RSA_free(rsa);
-	hx509_private_key_free(&key);
-	return EINVAL;
-    }
+    rsa->n = getattr_bn(p, slot, session, object, CKA_MODULUS);
+    rsa->e = getattr_bn(p, slot, session, object, CKA_PUBLIC_EXPONENT);
 
     p11rsa = calloc(1, sizeof(*p11rsa));
     if (p11rsa == NULL)
@@ -672,10 +663,7 @@ collect_private_key(hx509_context context,
     if (p->ref == UINT_MAX)
 	_hx509_abort("pkcs11 ref == UINT_MAX on alloc");
 
-    meth = get_p11_rsa_pkcs1_method();
-    if (meth == NULL)
-	_hx509_abort("failed to create RSA method");
-    RSA_set_method(rsa, meth);
+    RSA_set_method(rsa, &p11_rsa_pkcs1_method);
     ret = RSA_set_app_data(rsa, p11rsa);
     if (ret != 1)
 	_hx509_abort("RSA_set_app_data");
