@@ -4,7 +4,7 @@ PACKAGE=	kerberos
 
 PROG=	kpasswd
 CFLAGS+=-I${KRB5DIR}/lib/roken
-LIBADD=	hdb krb5 roken vers crypto
+LIBADD=	hdb krb5 roken vers hcrypto crypto
 LDFLAGS=${LDAPLDFLAGS}
 
 .include <bsd.prog.mk>

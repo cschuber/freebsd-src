@@ -5,7 +5,7 @@ PACKAGE=	kerberos-lib
 LIB=	kdc
 LDFLAGS=	-Wl,--no-undefined
 VERSION_MAP= ${KRB5DIR}/kdc/version-script.map
-LIBADD=	roken hdb hx509 krb5 heimntlm asn1 crypto
+LIBADD=	roken hdb hx509 krb5 heimntlm asn1 hcrypto crypto heimbase
 
 INCS=	kdc.h \
 	kdc-protos.h
@@ -18,19 +18,22 @@ SRCS=	\
 	default_config.c \
 	set_dbinfo.c \
 	digest.c \
+	fast.c \
 	kerberos5.c \
 	krb5tgs.c \
 	pkinit.c \
+	pkinit-ec.c \
 	log.c \
 	misc.c \
 	kx509.c \
 	process.c \
 	windc.c
 
-CFLAGS+=	-I${KRB5DIR}/lib/roken \
+CFLAGS+=	-I${KRB5DIR}/kdc \
+		-I${KRB5DIR}/lib/roken \
 		-I${KRB5DIR}/lib/krb5 \
 		-I${KRB5DIR}/lib/hdb \
-		-I${KRB5DIR}/kdc \
+		-I${KRB5DIR}/lib \
 		-I${SRCTOP}/contrib/com_err
 CFLAGS+=	-DOPENSSL_API_COMPAT=0x10100000L
 

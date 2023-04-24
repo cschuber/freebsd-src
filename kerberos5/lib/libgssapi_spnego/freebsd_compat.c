@@ -29,6 +29,7 @@
  */
 
 #include <gssapi/gssapi.h>
+#include <mechqueue.h>
 #include <mech_switch.h>
 
 gss_OID_desc __gss_c_nt_hostbased_service_oid_desc =

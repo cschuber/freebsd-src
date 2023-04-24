@@ -145,11 +145,15 @@ _LIBRARIES=	\
 		gpio \
 		gssapi \
 		gssapi_krb5 \
+		gssapi_mech \
+		gssapi_ntlm \
+		gssapi_spnego \
 		hdb \
 		heimbase \
 		heimntlm \
 		heimsqlite \
 		hx509 \
+		hcrypto \
 		icp \
 		ipsec \
 		ipt \
@@ -370,19 +374,23 @@ _DP_pam+=	ypclnt
 .endif
 _DP_roken=	crypt
 _DP_kadm5clnt=	com_err krb5 roken
-_DP_kadm5srv=	com_err hdb krb5 roken
-_DP_heimntlm=	crypto com_err krb5 roken
-_DP_hx509=	asn1 com_err crypto roken wind
-_DP_hdb=	asn1 com_err krb5 roken sqlite3
+_DP_kadm5srv=	com_err hdb krb5 roken heimbase
+_DP_heimntlm=	hcrypto crypto com_err krb5 roken wind
+_DP_hx509=	asn1 com_err hcrypto crypto roken wind heimbase
+_DP_hcrypto=	com_err crypto roken asn1 heimbase
+_DP_hdb=	asn1 com_err krb5 roken heimbase sqlite3
 _DP_asn1=	com_err roken
-_DP_kdc=	roken hdb hx509 krb5 heimntlm asn1 crypto
+_DP_kdc=	roken hdb hx509 krb5 heimntlm asn1 hcrypto crypto heimbase
 _DP_wind=	com_err roken
-_DP_heimbase=	pthread
+_DP_heimbase=	pthread roken
 _DP_heimipcc=	heimbase roken pthread
 _DP_heimipcs=	heimbase roken pthread
-_DP_kafs5=	asn1 krb5 roken
-_DP_krb5=	asn1 com_err crypt crypto hx509 roken wind heimbase heimipcc
-_DP_gssapi_krb5=	gssapi krb5 crypto roken asn1 com_err
+_DP_kafs5=	asn1 krb5 roken hcrypto crypto
+_DP_krb5=	asn1 com_err crypt hcrypto crypto hx509 roken wind heimbase heimipcc
+_DP_gssapi_krb5=	gssapi krb5 gssapi_mech hcrypto crypto roken asn1 heimbase com_err
+_DP_gssapi_ntlm=	hcrypto crypto gssapi krb5 heimntlm heimbase roken
+_DP_gssapi_mech=	gssapi krb5 hcrypto crypto roken asn1 heimbase heimntlm com_err
+_DP_gssapi_spnego=	gssapi heimbase asn1 roken
 _DP_lzma=	md pthread
 _DP_ucl=	m
 _DP_vmmapi=	util
@@ -706,6 +714,7 @@ LIBSSP_NONSHAREDDIR=	${_LIB_OBJTOP}/lib/libssp_nonshared
 LIBASN1DIR=	${_LIB_OBJTOP}/kerberos5/lib/libasn1
 LIBGSSAPI_KRB5DIR=	${_LIB_OBJTOP}/kerberos5/lib/libgssapi_krb5
 LIBGSSAPI_NTLMDIR=	${_LIB_OBJTOP}/kerberos5/lib/libgssapi_ntlm
+LIBGSSAPI_MECHDIR=	${_LIB_OBJTOP}/kerberos5/lib/libgssapi_mech
 LIBGSSAPI_SPNEGODIR=	${_LIB_OBJTOP}/kerberos5/lib/libgssapi_spnego
 LIBHDBDIR=	${_LIB_OBJTOP}/kerberos5/lib/libhdb
 LIBHEIMBASEDIR=	${_LIB_OBJTOP}/kerberos5/lib/libheimbase
@@ -713,6 +722,7 @@ LIBHEIMIPCCDIR=	${_LIB_OBJTOP}/kerberos5/lib/libheimipcc
 LIBHEIMIPCSDIR=	${_LIB_OBJTOP}/kerberos5/lib/libheimipcs
 LIBHEIMNTLMDIR=	${_LIB_OBJTOP}/kerberos5/lib/libheimntlm
 LIBHX509DIR=	${_LIB_OBJTOP}/kerberos5/lib/libhx509
+LIBHCRYPTODIR=	${_LIB_OBJTOP}/kerberos5/lib/libhcrypto
 LIBKADM5CLNTDIR=	${_LIB_OBJTOP}/kerberos5/lib/libkadm5clnt
 LIBKADM5SRVDIR=	${_LIB_OBJTOP}/kerberos5/lib/libkadm5srv
 LIBKAFS5DIR=	${_LIB_OBJTOP}/kerberos5/lib/libkafs5

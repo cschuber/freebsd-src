@@ -268,7 +268,7 @@ kadm5_store_principal_ent_mask(krb5_storage *sp,
 
     ret = krb5_store_int32(sp, mask);
     if (ret == 0)
-	ret = store_principal_ent (sp, princ, mask);
+	ret = store_principal_ent (sp, princ, mask, 1);
     return (ret);
 }
 

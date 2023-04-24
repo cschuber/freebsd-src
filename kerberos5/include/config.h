@@ -199,10 +199,10 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define HAVE_DAEMON 1
 
 /* define if you have a berkeley db1/2 library */
-/* #undef HAVE_DB1 */
+#define HAVE_DB1 1
 
 /* define if you have a berkeley db3/4/5/6 library */
-#define HAVE_DB3 1
+/* #define HAVE_DB3 */
 
 /* Define to 1 if you have the <db3/db.h> header file. */
 /* #undef HAVE_DB3_DB_H */
@@ -611,7 +611,7 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define HAVE_NDBM 1
 
 /* Define to 1 if you have the <ndbm.h> header file. */
-/* #undef HAVE_NDBM_H */
+#define HAVE_NDBM_H 1
 
 /* Define to 1 if you have the <netdb.h> header file. */
 #define HAVE_NETDB_H 1
