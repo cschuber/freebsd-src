@@ -61,6 +61,9 @@ SRCS+=		gss_verify_mic.c
 SRCS+=		gss_wrap.c
 SRCS+=		gss_wrap_size_limit.c
 
+CFLAGS+=	-I ${SRCTOP}/crypto/heimdal/lib/gssapi/mech
+CFLAGS+=	-I ${SRCTOP}/crypto/heimdal/lib/asn1
+
 MAN=
 MAN+=		gssapi.3
 MAN+=		gss_accept_sec_context.3
