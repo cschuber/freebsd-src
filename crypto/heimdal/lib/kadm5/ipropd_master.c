@@ -34,6 +34,19 @@
 #include "iprop.h"
 #include <rtbl.h>
 
+#ifndef _SOCKADDR_UNION_DEFINED
+#define _SOCKADDR_UNION_DEFINED
+/*
+ * The union of all possible address formats we handle.
+ */
+union sockaddr_union {
+	struct sockaddr         sa;
+	struct sockaddr_in      sin;
+	struct sockaddr_in6     sin6;
+};
+#endif /* _SOCKADDR_UNION_DEFINED */
+
+
 static krb5_log_facility *log_facility;
 
 static int verbose;
@@ -121,6 +134,43 @@ make_listen_socket (krb5_context context, const char *port_str)
     return fd;
 }
 
+static krb5_socket_t
+make_listen6_socket (krb5_context context, const char *port_str)
+{
+    krb5_socket_t fd;
+    int one = 1;
+    struct sockaddr_in6 addr;
+
+    fd = socket (AF_INET6, SOCK_STREAM, 0);
+    if (rk_IS_BAD_SOCKET(fd))
+	krb5_err (context, 1, rk_SOCK_ERRNO, "socket AF_INET6");
+    setsockopt (fd, SOL_SOCKET, SO_REUSEADDR, (void *)&one, sizeof(one));
+    memset (&addr, 0, sizeof(addr));
+    addr.sin6_family = AF_INET6;
+
+    if (port_str) {
+	addr.sin6_port = krb5_getportbyname (context,
+					      port_str, "tcp",
+					      0);
+	if (addr.sin6_port == 0) {
+	    char *ptr;
+	    long port;
+
+	    port = strtol (port_str, &ptr, 10);
+	    if (port == 0 && ptr == port_str)
+		krb5_errx (context, 1, "bad port `%s'", port_str);
+	    addr.sin6_port = htons(port);
+	}
+    } else {
+	addr.sin6_port = krb5_getportbyname (context, IPROP_SERVICE,
+					    "tcp", IPROP_PORT);
+    }
+    if(bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+	krb5_err (context, 1, errno, "bind6");
+    if (listen(fd, SOMAXCONN) < 0)
+	krb5_err (context, 1, errno, "listen6");
+    return fd;
+}
 
 struct slave {
     krb5_socket_t fd;
@@ -1677,7 +1727,7 @@ main(int argc, char **argv)
 
 #ifndef NO_LIMIT_FD_SETSIZE
 	if (signal_fd >= FD_SETSIZE || listen_fd >= FD_SETSIZE ||
-            restarter_fd >= FD_SETSIZE)
+            restarter_fd >= FD_SETSIZE || listen6_fd >= FD_SETSIZE)
 	    krb5_errx (context, IPROPD_RESTART, "fd too large");
 #endif
 
@@ -1687,6 +1737,8 @@ main(int argc, char **argv)
 	max_fd = max(max_fd, signal_fd);
 	FD_SET(listen_fd, &readset);
 	max_fd = max(max_fd, listen_fd);
+	FD_SET(listen6_fd, &readset);
+	max_fd = max(max_fd, listen6_fd);
         if (restarter_fd > -1) {
             FD_SET(restarter_fd, &readset);
             max_fd = max(max_fd, restarter_fd);
