@@ -52,6 +52,9 @@
 #   xargs -n1 | sort | uniq -d;
 # done
 
+# NNNNNNNN: Heimdal updated to 7.8.0
+OLD_FILES+=usr/bin/kcc
+
 # 20230623: OpenSSL 3.0.9
 OLD_LIBS+=lib/libcrypto.so.111
 OLD_FILES+=usr/include/openssl/rand_drbg.h
