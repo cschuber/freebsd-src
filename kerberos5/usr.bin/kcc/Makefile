@@ -9,7 +9,8 @@ LINKS=	${BINDIR}/kcc ${BINDIR}/klist \
 CFLAGS+=	-I${KRB5DIR}/lib/hx509 \
 		-I${KRB5DIR}/lib/asn1 \
 		-I${KRB5DIR}/lib/roken \
-		-I${KRB5DIR}/lib/sl -I.
+		-I${KRB5DIR}/lib/sl \
+		-I${KRB5DIR}/lib -I.
 LIBADD=	krb5 roken asn1 kafs5 edit sl vers
 SRCS=	kcc.c \
 	kcc-commands.c \

@@ -10,6 +10,7 @@ CFLAGS+=-I${KRB5DIR}/lib/krb5
 CFLAGS+=-I${KRB5DIR}/lib/asn1
 CFLAGS+=-I${KRB5DIR}/lib/hx509
 CFLAGS+=-I${KRB5DIR}/lib/ntlm
+CFLAGS+=-I${KRB5DIR}/lib
 CFLAGS+=-I${KRB5DIR}/kdc
 CFLAGS+=-I${SRCTOP}/contrib/com_err
 CFLAGS+=-I${.OBJDIR:H:H}/lib/libkrb5

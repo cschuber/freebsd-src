@@ -33,7 +33,11 @@
 
 #include "kadmin_locl.h"
 
+#ifdef __FreeBSD_version
+#include <gssapi/gssapi.h>
+#else
 #include <gssapi.h>
+#endif
 #include <gssapi_krb5.h>
 #include <gssapi_spnego.h>
 

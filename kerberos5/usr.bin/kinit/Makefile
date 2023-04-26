@@ -4,6 +4,7 @@ PACKAGE=	kerberos
 
 PROG=	kinit
 CFLAGS+=-I${KRB5DIR}/lib/roken
+CFLAGS+=-I${KRB5DIR}/lib
 LIBADD=	kafs5 krb5 heimntlm roken hcrypto crypto vers
 
 .include <bsd.prog.mk>

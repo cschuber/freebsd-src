@@ -8,6 +8,7 @@ CFLAGS+=	-I${KRB5DIR}/lib/hx509 \
 		-I${KRB5DIR}/lib/asn1 \
 		-I${KRB5DIR}/lib/roken \
 		-I${KRB5DIR}/lib/sl \
+		-I${KRB5DIR}/lib \
 		-I${SRCTOP}/contrib/com_err \
 		-I.
 LIBADD=	hx509 roken asn1 hcrypto crypto sl vers edit

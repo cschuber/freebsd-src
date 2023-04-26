@@ -10,6 +10,7 @@ PRECIOUSPROG=
 MAN=
 SRCS=	su.c
 CFLAGS+=-I${KRB5DIR}/lib/roken
+CFLAGS+=-I${KRB5DIR}/lib
 LIBADD=	kafs5 krb5 roken vers hcrypto crypto crypt
 
 .include <bsd.prog.mk>
