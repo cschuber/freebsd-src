@@ -33,9 +33,11 @@
 
 #include "krb5/gsskrb5_locl.h"
 
-OM_uint32
-_gsskrb5_pname_to_uid(OM_uint32 *minor_status, const gss_name_t pname,
-    const gss_OID mech, uid_t *uidp)
+OM_uint32 GSSAPI_CALLCONV
+_gsskrb5_localname(OM_uint32 *minor_status,
+		   gss_const_name_t pname,
+		   const gss_OID mech,
+		   gss_buffer_t localname)
 {
 	krb5_context context;
 	krb5_const_principal name = (krb5_const_principal) pname;
@@ -53,6 +55,15 @@ _gsskrb5_pname_to_uid(OM_uint32 *minor_status, const gss_name_t pname,
 	if (kret) {
 		*minor_status = kret;
 		return (GSS_S_FAILURE);
+	}
+
+	localname->length = strlen(lname);
+
+	localname->value = malloc(localname->length + 1);
+	if (localname->value == NULL) {
+		localname->length = 0;
+		*minor_status = ENOMEM;
+		return GSS_S_FAILURE;
 	}
 
 	*minor_status = 0;
@@ -74,7 +85,7 @@ _gsskrb5_pname_to_uid(OM_uint32 *minor_status, const gss_name_t pname,
 			buflen_hint = buflen;
 	}
 	if (pw) {
-		*uidp = pw->pw_uid;
+		memcpy(localname->value, lname, localname->length + 1);
 		ret = GSS_S_COMPLETE;
 	} else {
 		ret = GSS_S_FAILURE;
