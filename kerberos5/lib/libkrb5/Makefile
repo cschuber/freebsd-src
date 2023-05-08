@@ -15,7 +15,8 @@ INCS=	heim_err.h \
 	krb5-types.h \
 	krb5.h \
 	krb5_err.h \
-	krb5_ccapi.h
+	krb5_ccapi.h \
+	krb5_locl.h
 
 KRB5INCS=	locate_plugin.h \
 		send_to_kdc_plugin.h \
