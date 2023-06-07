@@ -4,7 +4,7 @@ PACKAGE=	kerberos-lib
 
 LIB=	gssapi_spnego
 LDFLAGS= -Wl,-Bsymbolic -Wl,--no-undefined
-LIBADD=	gssapi heimbase asn1 roken
+LIBADD=	gssapi gssapi_mech heimbase asn1 roken
 SHLIB_MAJOR=	10
 
 SRCS=	accept_sec_context.c \

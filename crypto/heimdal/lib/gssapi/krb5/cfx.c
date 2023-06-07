@@ -301,7 +301,6 @@ _gk_verify_buffers(OM_uint32 *minor_status,
     return GSS_S_COMPLETE;
 }
 
-#if 0
 OM_uint32
 _gssapi_wrap_cfx_iov(OM_uint32 *minor_status,
 		     gsskrb5_ctx ctx,
@@ -667,7 +666,6 @@ _gssapi_wrap_cfx_iov(OM_uint32 *minor_status,
 
     return major_status;
 }
-#endif
 
 /* This is slowpath */
 static OM_uint32
@@ -740,7 +738,6 @@ unrotate_iov(OM_uint32 *minor_status, size_t rrc, gss_iov_buffer_desc *iov, int 
     return GSS_S_COMPLETE;
 }
 
-#if 0
 
 OM_uint32
 _gssapi_unwrap_cfx_iov(OM_uint32 *minor_status,
@@ -1042,7 +1039,6 @@ _gssapi_unwrap_cfx_iov(OM_uint32 *minor_status,
 
     return major_status;
 }
-#endif
 
 OM_uint32
 _gssapi_wrap_iov_length_cfx(OM_uint32 *minor_status,

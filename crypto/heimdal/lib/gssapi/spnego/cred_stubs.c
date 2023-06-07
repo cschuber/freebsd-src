@@ -252,7 +252,6 @@ _gss_spnego_set_cred_option (OM_uint32 *minor_status,
 			      value);
 }
 
-#if 0
 
 OM_uint32 GSSAPI_CALLCONV
 _gss_spnego_export_cred (OM_uint32 *minor_status,
@@ -270,4 +269,3 @@ _gss_spnego_import_cred (OM_uint32 *minor_status,
     return gss_import_cred(minor_status, value, cred_handle);
 }
 
-#endif
