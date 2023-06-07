@@ -39,7 +39,6 @@
  *  negotiation token is identified by the Object Identifier
  *  iso.org.dod.internet.security.mechanism.snego (1.3.6.1.5.5.2).
  */
-#if 0
 static gss_mo_desc spnego_mo[] = {
     {
 	GSS_C_MA_SASL_MECH_NAME,
@@ -82,7 +81,6 @@ static gss_mo_desc spnego_mo[] = {
 	NULL
     }
 };
-#endif
 
 static gssapi_mech_interface_desc spnego_mech = {
     GMI_VERSION,
@@ -123,7 +121,7 @@ static gssapi_mech_interface_desc spnego_mech = {
     _gss_spnego_set_sec_context_option,
     _gss_spnego_set_cred_option,
     _gss_spnego_pseudo_random,
-#if 0
+#if 1
     _gss_spnego_wrap_iov,
     _gss_spnego_unwrap_iov,
     _gss_spnego_wrap_iov_length,
@@ -133,7 +131,7 @@ static gssapi_mech_interface_desc spnego_mech = {
     NULL,
 #endif
     NULL,
-#if 0
+#if 1
     _gss_spnego_export_cred,
     _gss_spnego_import_cred,
 #else
@@ -147,7 +145,7 @@ static gssapi_mech_interface_desc spnego_mech = {
     NULL,
     NULL,
     NULL,
-#if 0
+#if 1
     spnego_mo,
     sizeof(spnego_mo) / sizeof(spnego_mo[0]),
 #else

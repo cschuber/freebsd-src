@@ -642,7 +642,6 @@ OM_uint32 GSSAPI_CALLCONV _gss_spnego_duplicate_name (
     return gss_duplicate_name(minor_status, src_name, dest_name);
 }
 
-#if 0
 OM_uint32 GSSAPI_CALLCONV
 _gss_spnego_wrap_iov(OM_uint32 * minor_status,
 		     gss_ctx_id_t  context_handle,
@@ -705,8 +704,6 @@ _gss_spnego_wrap_iov_length(OM_uint32 * minor_status,
 			       conf_req_flag, qop_req, conf_state,
 			       iov, iov_count);
 }
-
-#endif
 
 #if 0
 OM_uint32 GSSAPI_CALLCONV _gss_spnego_complete_auth_token

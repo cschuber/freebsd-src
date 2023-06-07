@@ -114,7 +114,10 @@ SRCS=	8003.c \
 	unwrap.c \
 	verify_mic.c \
 	wrap.c \
+	${SRCS_KRB5} \
 	${GEN:S/.x$/.c/:S/.hx$/.h/}
+
+SRCS_KRB5=	aeap.c
 
 #SRCS+=	gss_add_oid_set_member.c \
 #	gss_create_empty_oid_set.c \

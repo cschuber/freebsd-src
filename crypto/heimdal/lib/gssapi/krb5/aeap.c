@@ -35,7 +35,6 @@
 
 #include <roken.h>
 
-#if 0
 OM_uint32 GSSAPI_CALLCONV
 _gk_wrap_iov(OM_uint32 * minor_status,
 	     gss_ctx_id_t  context_handle,
@@ -129,7 +128,6 @@ _gk_unwrap_iov(OM_uint32 *minor_status,
     krb5_free_keyblock(context, key);
     return ret;
 }
-#endif
 
 OM_uint32 GSSAPI_CALLCONV
 _gk_wrap_iov_length(OM_uint32 * minor_status,
