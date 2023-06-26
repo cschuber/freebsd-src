@@ -54,6 +54,7 @@ PAM_EXTERN int
 pam_sm_authenticate(pam_handle_t *pamh, int flags __unused,
     int argc __unused, const char *argv[] __unused)
 {
+	krb5_boolean	allow_homedir;
 	krb5_context	 context;
 	krb5_principal	 su_principal;
 	const char	*user;
@@ -70,22 +71,28 @@ pam_sm_authenticate(pam_handle_t *pamh, int flags __unused,
 	if (pamret != PAM_SUCCESS)
 		return (pamret);
 	PAM_LOG("Got ruser: %s", (const char *)ruser);
+	allow_homedir = krb5_set_home_dir_access(NULL, FALSE);
 	rv = krb5_init_context(&context);
 	if (rv != 0) {
 		const char *msg = krb5_get_error_message(context, rv);
 		PAM_LOG("krb5_init_context failed: %s", msg);
 		krb5_free_error_message(context, msg);
-		return (PAM_SERVICE_ERR);
+		pamret = PAM_SERVICE_ERR;
+		goto out;
 	}
 	rv = get_su_principal(context, user, ruser, &su_principal_name, &su_principal);
-	if (rv != 0)
-		return (PAM_AUTH_ERR);
+	if (rv != 0) {
+		pamret = PAM_AUTH_ERR;
+		goto out;
+	}
 	PAM_LOG("kuserok: %s -> %s", su_principal_name, user);
 	rv = krb5_kuserok(context, su_principal, user);
 	pamret = rv ? auth_krb5(pamh, context, su_principal_name, su_principal) : PAM_AUTH_ERR;
 	free(su_principal_name);
 	krb5_free_principal(context, su_principal);
 	krb5_free_context(context);
+out:
+	(void)krb5_set_home_dir_access(NULL, allow_homedir);
 	return (pamret);
 }
 
