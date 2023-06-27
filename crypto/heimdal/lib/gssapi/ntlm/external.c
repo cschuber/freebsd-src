@@ -33,7 +33,6 @@
 
 #include "ntlm.h"
 
-#if 0
 static gss_mo_desc ntlm_mo[] = {
     {
 	GSS_C_MA_SASL_MECH_NAME,
@@ -61,7 +60,6 @@ static gss_mo_desc ntlm_mo[] = {
     }
 };
 
-#endif
 
 static gssapi_mech_interface_desc ntlm_mech = {
     GMI_VERSION,

@@ -4,7 +4,7 @@ PACKAGE=	kerberos-lib
 
 LIB=	gssapi_ntlm
 LDFLAGS= -Wl,-Bsymbolic -Wl,--no-undefined
-LIBADD=	hcrypto crypto gssapi krb5 heimntlm heimbase roken
+LIBADD=	hcrypto crypto gssapi krb5 gssapi_mech heimntlm heimbase roken
 SHLIB_MAJOR=	10
 
 SRCS=	accept_sec_context.c \

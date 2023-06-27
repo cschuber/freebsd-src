@@ -182,7 +182,6 @@ gss_OID_desc GSSAPI_LIB_VARIABLE __gss_iakerb_min_msg_mechanism_oid_desc =
  * Context for krb5 calls.
  */
 
-#if 0
 static gss_mo_desc krb5_mo[] = {
     {
 	GSS_C_MA_SASL_MECH_NAME,
@@ -329,7 +328,6 @@ static gss_mo_desc krb5_mo[] = {
 	NULL
     }
 };
-#endif
 
 /*
  *
