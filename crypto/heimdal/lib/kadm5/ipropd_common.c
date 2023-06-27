@@ -53,6 +53,7 @@ setup_signal(void)
     {
 	struct sigaction sa;
 
+        memset(&sa, 0, sizeof(sa));
 	sa.sa_flags = 0;
 	sa.sa_handler = sigterm;
 	sigemptyset(&sa.sa_mask);
@@ -207,10 +208,10 @@ restarter(krb5_context context, size_t *countp)
 
     assert(pid > 0);
     if (wpid != pid) {
-        warnx("Interrupted; killing child (pid %ld) with %jd",
-              (long)pid, (intmax_t)exit_flag);
-        krb5_warnx(context, "Interrupted; killing child (pid %ld) with %jd",
-                   (long)pid, (intmax_t)exit_flag);
+        warnx("Interrupted; killing child (pid %ld) with %d",
+              (long)pid, exit_flag);
+        krb5_warnx(context, "Interrupted; killing child (pid %ld) with %d",
+                   (long)pid, exit_flag);
         kill(pid, exit_flag);
 
         /* Wait up to one second for the child */

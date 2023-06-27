@@ -36,7 +36,7 @@
 #ifndef GSSAPI_KRB5_H_
 #define GSSAPI_KRB5_H_
 
-#include <gssapi.h>
+#include <gssapi/gssapi.h>
 #include <gssapi/gssapi_oid.h>
 
 GSSAPI_CPP_START
@@ -217,6 +217,8 @@ gss_krb5_set_allowable_enctypes(OM_uint32 *minor_status,
 				gss_cred_id_t cred,
 				OM_uint32 num_enctypes,
 				int32_t *enctypes);
+
+#define GSS_KRB5_NAME_ATTRIBUTE_BASE_URN "urn:ietf:kerberos:nameattr-"
 
 GSSAPI_CPP_END
 

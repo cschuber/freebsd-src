@@ -167,10 +167,13 @@ arcfour_mic_cksum_iov(krb5_context context,
 	    continue;
 	}
 
-	memcpy(ptr + ofs,
-	       iov[i].buffer.value,
-	       iov[i].buffer.length);
-	ofs += iov[i].buffer.length;
+	if (iov[i].buffer.length > 0) {
+	    assert(iov[i].buffer.value != NULL);
+	    memcpy(ptr + ofs,
+		   iov[i].buffer.value,
+		   iov[i].buffer.length);
+	    ofs += iov[i].buffer.length;
+	}
     }
 
     if (padding) {
@@ -237,7 +240,7 @@ _gssapi_get_mic_arcfour(OM_uint32 * minor_status,
     int32_t seq_number;
     size_t len, total_len;
     u_char k6_data[16], *p0, *p;
-    EVP_CIPHER_CTX rc4_key;
+    EVP_CIPHER_CTX *rc4_key;
 
     _gsskrb5_encap_length (22, &len, &total_len, GSS_KRB5_MECHANISM);
 
@@ -290,7 +293,7 @@ _gssapi_get_mic_arcfour(OM_uint32 * minor_status,
 				     context_handle->auth_context,
 				     &seq_number);
     p = p0 + 8; /* SND_SEQ */
-    _gsskrb5_encode_be_om_uint32(seq_number, p);
+    _gss_mg_encode_be_uint32(seq_number, p);
 
     krb5_auth_con_setlocalseqnumber (context,
 				     context_handle->auth_context,
@@ -299,10 +302,16 @@ _gssapi_get_mic_arcfour(OM_uint32 * minor_status,
 
     memset (p + 4, (context_handle->more_flags & LOCAL) ? 0 : 0xff, 4);
 
-    EVP_CIPHER_CTX_init(&rc4_key);
-    EVP_CipherInit_ex(&rc4_key, EVP_rc4(), NULL, k6_data, NULL, 1);
-    EVP_Cipher(&rc4_key, p, p, 8);
-    EVP_CIPHER_CTX_cleanup(&rc4_key);
+    rc4_key = EVP_CIPHER_CTX_new();
+    if (rc4_key == NULL) {
+	_gsskrb5_release_buffer(minor_status, message_token);
+	*minor_status = ENOMEM;
+	return GSS_S_FAILURE;
+    }
+
+    EVP_CipherInit_ex(rc4_key, EVP_rc4(), NULL, k6_data, NULL, 1);
+    EVP_Cipher(rc4_key, p, p, 8);
+    EVP_CIPHER_CTX_free(rc4_key);
 
     memset_s(k6_data, sizeof(k6_data), 0, sizeof(k6_data));
 
@@ -365,24 +374,28 @@ _gssapi_verify_mic_arcfour(OM_uint32 * minor_status,
 	return GSS_S_FAILURE;
     }
 
-    cmp = (ct_memcmp(cksum_data, p + 8, 8) == 0);
+    cmp = (ct_memcmp(cksum_data, p + 8, 8) != 0);
     if (cmp) {
 	*minor_status = 0;
 	return GSS_S_BAD_MIC;
     }
 
     {
-	EVP_CIPHER_CTX rc4_key;
+	EVP_CIPHER_CTX *rc4_key;
 
-	EVP_CIPHER_CTX_init(&rc4_key);
-	EVP_CipherInit_ex(&rc4_key, EVP_rc4(), NULL, (void *)k6_data, NULL, 0);
-	EVP_Cipher(&rc4_key, SND_SEQ, p, 8);
-	EVP_CIPHER_CTX_cleanup(&rc4_key);
+	rc4_key = EVP_CIPHER_CTX_new();
+	if (rc4_key == NULL) {
+	    *minor_status = ENOMEM;
+	    return GSS_S_FAILURE;
+	}
+	EVP_CipherInit_ex(rc4_key, EVP_rc4(), NULL, (void *)k6_data, NULL, 0);
+	EVP_Cipher(rc4_key, SND_SEQ, p, 8);
+	EVP_CIPHER_CTX_free(rc4_key);
 
 	memset(k6_data, 0, sizeof(k6_data));
     }
 
-    _gsskrb5_decode_be_om_uint32(SND_SEQ, &seq_number);
+    _gss_mg_decode_be_uint32(SND_SEQ, &seq_number);
 
     if (context_handle->more_flags & LOCAL)
 	cmp = (ct_memcmp(&SND_SEQ[4], "\xff\xff\xff\xff", 4) != 0);
@@ -470,7 +483,7 @@ _gssapi_wrap_arcfour(OM_uint32 * minor_status,
 				     context_handle->auth_context,
 				     &seq_number);
 
-    _gsskrb5_encode_be_om_uint32(seq_number, p0 + 8);
+    _gss_mg_encode_be_uint32(seq_number, p0 + 8);
 
     krb5_auth_con_setlocalseqnumber (context,
 				     context_handle->auth_context,
@@ -525,12 +538,17 @@ _gssapi_wrap_arcfour(OM_uint32 * minor_status,
 
 
     if(conf_req_flag) {
-	EVP_CIPHER_CTX rc4_key;
+	EVP_CIPHER_CTX *rc4_key;
 
-	EVP_CIPHER_CTX_init(&rc4_key);
-	EVP_CipherInit_ex(&rc4_key, EVP_rc4(), NULL, k6_data, NULL, 1);
-	EVP_Cipher(&rc4_key, p0 + 24, p0 + 24, 8 + datalen);
-	EVP_CIPHER_CTX_cleanup(&rc4_key);
+	rc4_key = EVP_CIPHER_CTX_new();
+	if (rc4_key == NULL) {
+	    _gsskrb5_release_buffer(minor_status, output_message_buffer);
+	    *minor_status = ENOMEM;
+	    return GSS_S_FAILURE;
+	}
+	EVP_CipherInit_ex(rc4_key, EVP_rc4(), NULL, k6_data, NULL, 1);
+	EVP_Cipher(rc4_key, p0 + 24, p0 + 24, 8 + datalen);
+	EVP_CIPHER_CTX_free(rc4_key);
     }
     memset(k6_data, 0, sizeof(k6_data));
 
@@ -544,7 +562,7 @@ _gssapi_wrap_arcfour(OM_uint32 * minor_status,
     }
 
     {
-	EVP_CIPHER_CTX rc4_key;
+	EVP_CIPHER_CTX *rc4_key;
 
 	EVP_CIPHER_CTX_init(&rc4_key);
 	EVP_CipherInit_ex(&rc4_key, EVP_rc4(), NULL, k6_data, NULL, 1);
@@ -644,7 +662,7 @@ OM_uint32 _gssapi_unwrap_arcfour(OM_uint32 *minor_status,
     }
 
     {
-	EVP_CIPHER_CTX rc4_key;
+	EVP_CIPHER_CTX *rc4_key;
 
 	EVP_CIPHER_CTX_init(&rc4_key);
 	EVP_CipherInit_ex(&rc4_key, EVP_rc4(), NULL, k6_data, NULL, 1);
@@ -653,7 +671,7 @@ OM_uint32 _gssapi_unwrap_arcfour(OM_uint32 *minor_status,
 	memset_s(k6_data, sizeof(k6_data), 0, sizeof(k6_data));
     }
 
-    _gsskrb5_decode_be_om_uint32(SND_SEQ, &seq_number);
+    _gss_mg_decode_be_uint32(SND_SEQ, &seq_number);
 
     if (context_handle->more_flags & LOCAL)
 	cmp = (ct_memcmp(&SND_SEQ[4], "\xff\xff\xff\xff", 4) != 0);
@@ -692,13 +710,18 @@ OM_uint32 _gssapi_unwrap_arcfour(OM_uint32 *minor_status,
     output_message_buffer->length = datalen;
 
     if(conf_flag) {
-	EVP_CIPHER_CTX rc4_key;
+	EVP_CIPHER_CTX *rc4_key;
 
-	EVP_CIPHER_CTX_init(&rc4_key);
-	EVP_CipherInit_ex(&rc4_key, EVP_rc4(), NULL, k6_data, NULL, 1);
-	EVP_Cipher(&rc4_key, Confounder, p0 + 24, 8);
-	EVP_Cipher(&rc4_key, output_message_buffer->value, p0 + GSS_ARCFOUR_WRAP_TOKEN_SIZE, datalen);
-	EVP_CIPHER_CTX_cleanup(&rc4_key);
+	rc4_key = EVP_CIPHER_CTX_new();
+	if (rc4_key == NULL) {
+	    _gsskrb5_release_buffer(minor_status, output_message_buffer);
+	    *minor_status = ENOMEM;
+	    return GSS_S_FAILURE;
+	}
+	EVP_CipherInit_ex(rc4_key, EVP_rc4(), NULL, k6_data, NULL, 1);
+	EVP_Cipher(rc4_key, Confounder, p0 + 24, 8);
+	EVP_Cipher(rc4_key, output_message_buffer->value, p0 + GSS_ARCFOUR_WRAP_TOKEN_SIZE, datalen);
+	EVP_CIPHER_CTX_free(rc4_key);
     } else {
 	memcpy(Confounder, p0 + 24, 8); /* Confounder */
 	memcpy(output_message_buffer->value,
@@ -730,7 +753,7 @@ OM_uint32 _gssapi_unwrap_arcfour(OM_uint32 *minor_status,
 	return GSS_S_FAILURE;
     }
 
-    cmp = (ct_memcmp(cksum_data, p0 + 16, 8) == 0); /* SGN_CKSUM */
+    cmp = (ct_memcmp(cksum_data, p0 + 16, 8) != 0); /* SGN_CKSUM */
     if (cmp) {
 	_gsskrb5_release_buffer(minor_status, output_message_buffer);
 	*minor_status = 0;
@@ -1039,7 +1062,7 @@ _gssapi_wrap_iov_arcfour(OM_uint32 *minor_status,
     krb5_auth_con_getlocalseqnumber(context,
 				    ctx->auth_context,
 				    &seq_number);
-    _gsskrb5_encode_be_om_uint32(seq_number, p0 + 8);
+    _gss_mg_encode_be_uint32(seq_number, p0 + 8);
 
     krb5_auth_con_setlocalseqnumber(context,
 				    ctx->auth_context,
@@ -1204,7 +1227,7 @@ _gssapi_unwrap_iov_arcfour(OM_uint32 *minor_status,
 
     verify_len = header->buffer.length;
 
-    if (!IS_DCE_STYLE(context)) {
+    if (!IS_DCE_STYLE(ctx)) {
 	for (i = 0; i < iov_count; i++) {
 	    /* length in header also includes data and padding */
 	    if (GSS_IOV_BUFFER_TYPE(iov[i].type) == GSS_IOV_BUFFER_TYPE_DATA)
@@ -1276,7 +1299,7 @@ _gssapi_unwrap_iov_arcfour(OM_uint32 *minor_status,
 	memset(k6_data, 0, sizeof(k6_data));
     }
 
-    _gsskrb5_decode_be_om_uint32(snd_seq, &seq_number);
+    _gss_mg_decode_be_uint32(snd_seq, &seq_number);
 
     if (ctx->more_flags & LOCAL) {
 	cmp = (ct_memcmp(&snd_seq[4], "\xff\xff\xff\xff", 4) != 0);
@@ -1356,8 +1379,8 @@ _gssapi_unwrap_iov_arcfour(OM_uint32 *minor_status,
 	return GSS_S_FAILURE;
     }
 
-    cmp = memcmp(cksum_data, p0 + 16, 8); /* SGN_CKSUM */
-    if (cmp != 0) {
+    cmp = (ct_memcmp(cksum_data, p0 + 16, 8) != 0); /* SGN_CKSUM */
+    if (cmp) {
 	*minor_status = 0;
 	return GSS_S_BAD_MIC;
     }

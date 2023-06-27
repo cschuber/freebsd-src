@@ -32,16 +32,13 @@
  */
 
 #include "hx_locl.h"
-#ifdef HAVE_DLFCN_H
-#include <dlfcn.h>
-#endif
 
 #ifdef HAVE_DLOPEN
 
 #include "ref/pkcs11.h"
 
 struct p11_slot {
-    int flags;
+    uint64_t flags;
 #define P11_SESSION		1
 #define P11_SESSION_IN_USE	2
 #define P11_LOGIN_REQ		4
@@ -627,6 +624,8 @@ collect_private_key(hx509_context context,
     hx509_private_key key;
     heim_octet_string localKeyId;
     int ret;
+    const RSA_METHOD *meth;
+    BIGNUM *n, *e;
     RSA *rsa;
     struct p11_rsa *p11rsa;
 
@@ -646,8 +645,15 @@ collect_private_key(hx509_context context,
      * the pkcs11 specification, but some smartcards leaves it out,
      * let ignore any failure to fetch it.
      */
-    rsa->n = getattr_bn(p, slot, session, object, CKA_MODULUS);
-    rsa->e = getattr_bn(p, slot, session, object, CKA_PUBLIC_EXPONENT);
+    n = getattr_bn(p, slot, session, object, CKA_MODULUS);
+    e = getattr_bn(p, slot, session, object, CKA_PUBLIC_EXPONENT);
+    if (RSA_set0_key(rsa, n, e, NULL) != 1) {
+	BN_free(n);
+	BN_free(e);
+	RSA_free(rsa);
+	hx509_private_key_free(&key);
+	return EINVAL;
+    }
 
     p11rsa = calloc(1, sizeof(*p11rsa));
     if (p11rsa == NULL)
@@ -663,7 +669,10 @@ collect_private_key(hx509_context context,
     if (p->ref == UINT_MAX)
 	_hx509_abort("pkcs11 ref == UINT_MAX on alloc");
 
-    RSA_set_method(rsa, &p11_rsa_pkcs1_method);
+    meth = get_p11_rsa_pkcs1_method();
+    if (meth == NULL)
+	_hx509_abort("failed to create RSA method");
+    RSA_set_method(rsa, meth);
     ret = RSA_set_app_data(rsa, p11rsa);
     if (ret != 1)
 	_hx509_abort("RSA_set_app_data");
@@ -823,6 +832,18 @@ p11_init(hx509_context context,
 
     *data = NULL;
 
+    if (flags & HX509_CERTS_NO_PRIVATE_KEYS) {
+	hx509_set_error_string(context, 0, ENOTSUP,
+			       "PKCS#11 store does not support "
+                               "HX509_CERTS_NO_PRIVATE_KEYS flag");
+        return ENOTSUP;
+    }
+
+    if (residue == NULL || residue[0] == '\0') {
+	hx509_set_error_string(context, 0, EINVAL,
+			       "PKCS#11 store not specified");
+        return EINVAL;
+    }
     list = strdup(residue);
     if (list == NULL)
 	return ENOMEM;
@@ -849,7 +870,7 @@ p11_init(hx509_context context,
 	str = strnext;
     }
 
-    p->dl_handle = dlopen(list, RTLD_NOW);
+    p->dl_handle = dlopen(list, RTLD_NOW | RTLD_LOCAL | RTLD_GROUP);
     if (p->dl_handle == NULL) {
 	ret = HX509_PKCS11_LOAD;
 	hx509_set_error_string(context, 0, ret,
@@ -1206,12 +1227,13 @@ static struct hx509_keyset_ops keyset_pkcs11 = {
     p11_iter_end,
     p11_printinfo,
     NULL,
+    NULL,
     NULL
 };
 
 #endif /* HAVE_DLOPEN */
 
-void
+HX509_LIB_FUNCTION void HX509_LIB_CALL
 _hx509_ks_pkcs11_register(hx509_context context)
 {
 #ifdef HAVE_DLOPEN

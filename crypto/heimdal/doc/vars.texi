@@ -4,5 +4,4 @@
 @c
 
 @set dbdir /var/heimdal
-@set dbtype db3
-@set PACKAGE_VERSION 7.8.0
+@set PACKAGE_VERSION 1.5.2
