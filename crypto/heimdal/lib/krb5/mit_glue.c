@@ -67,22 +67,23 @@ krb5_c_verify_checksum(krb5_context context, const krb5_keyblock *key,
 		       const krb5_checksum *cksum, krb5_boolean *valid)
 {
     krb5_error_code ret;
-    krb5_checksum data_cksum;
+    krb5_crypto crypto;
 
     *valid = 0;
 
-    ret = krb5_c_make_checksum(context, cksum->cksumtype,
-			       key, usage, data, &data_cksum);
+    ret = krb5_crypto_init(context, key, 0, &crypto);
     if (ret)
 	return ret;
 
-    if (data_cksum.cksumtype == cksum->cksumtype
-	&& krb5_data_ct_cmp(&data_cksum.checksum, &cksum->checksum) == 0)
+    ret = krb5_verify_checksum(context, crypto, usage,
+			       data->data, data->length, rk_UNCONST(cksum));
+    krb5_crypto_destroy(context, crypto);
+
+    if (ret == 0) {
 	*valid = 1;
+    }
 
-    krb5_free_checksum_contents(context, &data_cksum);
-
-    return 0;
+    return ret;
 }
 
 KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
@@ -96,7 +97,7 @@ krb5_c_get_checksum(krb5_context context, const krb5_checksum *cksum,
     if (data) {
 	*data = malloc(sizeof(**data));
 	if (*data == NULL)
-	    return ENOMEM;
+	    return krb5_enomem(context);
 
 	ret = der_copy_octet_string(&cksum->checksum, *data);
 	if (ret) {
@@ -167,7 +168,7 @@ krb5_copy_checksum (krb5_context context,
 {
     *new = malloc(sizeof(**new));
     if (*new == NULL)
-	return ENOMEM;
+	return krb5_enomem(context);
     return copy_Checksum(old, *new);
 }
 
@@ -378,7 +379,8 @@ krb5_c_prf(krb5_context context,
 KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
 krb5_c_random_make_octets(krb5_context context, krb5_data * data)
 {
-    return krb5_generate_random_keyblock(context, data->length, data->data);
+    krb5_generate_random_block(data->data, data->length);
+    return 0;
 }
 
 /**

@@ -45,6 +45,7 @@ DLLDEPS= \
 	$(LIBSQLITE)	\
 	$(LIBWIND)	\
 	$(LIBLTM)	\
+	$(LIBX25519)	\
 	$(LIBHEIMBASE)
 
 DLLSDKDEPS= \
@@ -52,7 +53,14 @@ DLLSDKDEPS= \
 	secur32.lib	\
 	shell32.lib	\
 	dnsapi.lib      \
-        shlwapi.lib
+	shlwapi.lib 	\
+	version.lib
+
+
+dlllflags=$(dlllflags) /DELAYLOAD:bcrypt.dll
+DLLSDKDEPS=$(DLLSDKDEPS)\
+	bcrypt.lib	\
+	delayimp.lib 
 
 DEF=$(OBJ)\heimdal.def
 
@@ -88,6 +96,3 @@ $(LIBHEIMDAL): $(LIBASN1) $(LIBWIND) $(LIBHCRYPTO) $(LIBHX509) $(LIBKRB5) $(LIBH
 !endif
 
 all:: $(LIBHEIMDAL)
-
-clean::
-	-$(RM) $(LIBHEIMDAL)

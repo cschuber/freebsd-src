@@ -38,11 +38,14 @@
 #endif
 
 static struct _krb5_key_type keytype_null = {
-    ENCTYPE_NULL,
+    KRB5_ENCTYPE_NULL,
     "null",
     0,
     0,
     0,
+    NULL,
+    NULL,
+    NULL,
     NULL,
     NULL,
     NULL
@@ -50,10 +53,11 @@ static struct _krb5_key_type keytype_null = {
 
 static krb5_error_code
 NONE_checksum(krb5_context context,
+	      krb5_crypto crypto,
 	      struct _krb5_key_data *key,
-	      const void *data,
-	      size_t len,
 	      unsigned usage,
+	      const struct krb5_crypto_iov *iov,
+	      int niov,
 	      Checksum *C)
 {
     return 0;
@@ -84,14 +88,16 @@ NULL_encrypt(krb5_context context,
 struct _krb5_encryption_type _krb5_enctype_null = {
     ETYPE_NULL,
     "null",
+    NULL,
     1,
     1,
     0,
     &keytype_null,
     &_krb5_checksum_none,
     NULL,
-    F_DISABLED,
+    F_DISABLED | F_OLD,
     NULL_encrypt,
+    NULL,
     0,
     NULL
 };

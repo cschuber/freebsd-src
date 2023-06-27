@@ -41,6 +41,7 @@ int local_flag;
 static int ad_flag;
 static int help_flag;
 static int version_flag;
+static char *hdb;
 static char *realm;
 static char *admin_server;
 static int server_port = 0;
@@ -62,6 +63,10 @@ static struct getargs args[] = {
     {
 	"key-file",	'k',	arg_string, &keyfile,
 	"location of master key file", "file"
+    },
+    {
+	"hdb",	'H',	arg_string,   &hdb,
+	"HDB to use", "hdb"
     },
     {
 	"realm",	'r',	arg_string,   &realm,
@@ -112,6 +117,18 @@ exit_kadmin (void *opt, int argc, char **argv)
     return 0;
 }
 
+int
+lock(void *opt, int argc, char **argv)
+{
+    return kadm5_lock(kadm_handle);
+}
+
+int
+unlock(void *opt, int argc, char **argv)
+{
+    return kadm5_unlock(kadm_handle);
+}
+
 static void
 usage(int ret)
 {
@@ -147,6 +164,7 @@ main(int argc, char **argv)
     kadm5_config_params conf;
     int optidx = 0;
     int exit_status = 0;
+    int aret;
 
     setprogname(argv[0]);
 
@@ -169,8 +187,8 @@ main(int argc, char **argv)
     argv += optidx;
 
     if (config_file == NULL) {
-	asprintf(&config_file, "%s/kdc.conf", hdb_db_dir(context));
-	if (config_file == NULL)
+	aret = asprintf(&config_file, "%s/kdc.conf", hdb_db_dir(context));
+	if (aret == -1)
 	    errx(1, "out of memory");
     }
 
@@ -189,6 +207,11 @@ main(int argc, char **argv)
 						   some other way */
 	conf.realm = realm;
 	conf.mask |= KADM5_CONFIG_REALM;
+    }
+
+    if (hdb) {
+	conf.dbname = hdb;
+	conf.mask |= KADM5_CONFIG_DBNAME;
     }
 
     if (admin_server) {
@@ -265,7 +288,7 @@ main(int argc, char **argv)
     if (argc != 0) {
 	ret = sl_command (commands, argc, argv);
 	if(ret == -1)
-	    krb5_warnx (context, "unrecognized command: %s", argv[0]);
+	    sl_did_you_mean(commands, argv[0]);
 	else if (ret == -2)
 	    ret = 0;
 	if(ret != 0)
@@ -273,10 +296,13 @@ main(int argc, char **argv)
     } else {
 	while(!exit_seen) {
 	    ret = sl_command_loop(commands, "kadmin> ", NULL);
-	    if (ret == -2)
+	    if (ret == -2) {
 		exit_seen = 1;
-	    else if (ret != 0)
+            } else if (ret != 0) {
 		exit_status = 1;
+                if (!isatty(STDIN_FILENO))
+                    exit_seen = 1;
+            }
 	}
     }
 

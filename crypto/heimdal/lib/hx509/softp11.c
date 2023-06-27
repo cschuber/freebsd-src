@@ -34,7 +34,7 @@
 #define CRYPTOKI_EXPORTS 1
 
 #include "hx_locl.h"
-#include "pkcs11.h"
+#include "ref/pkcs11.h"
 
 #define OBJECT_ID_MASK		0xfff
 #define HANDLE_OBJECT_ID(h)	((h) & OBJECT_ID_MASK)
@@ -311,7 +311,7 @@ add_st_object(void)
 	return NULL;
 
     for (i = 0; i < soft_token.object.num_objs; i++) {
-	if (soft_token.object.objs == NULL) {
+	if (soft_token.object.objs[i] == NULL) {
 	    soft_token.object.objs[i] = o;
 	    break;
 	}
@@ -422,7 +422,7 @@ struct foo {
     char *id;
 };
 
-static int
+static int HX509_LIB_CALL
 add_cert(hx509_context hxctx, void *ctx, hx509_cert cert)
 {
     static char empty[] = "";
@@ -547,6 +547,8 @@ add_cert(hx509_context hxctx, void *ctx, hx509_cert cert)
 	CK_FLAGS flags;
 
 	type = CKO_PRIVATE_KEY;
+
+        /* Note to static analyzers: `o' is still referred to via globals */
 	o = add_st_object();
 	if (o == NULL) {
 	    ret = CKR_DEVICE_MEMORY;
@@ -597,6 +599,7 @@ add_cert(hx509_context hxctx, void *ctx, hx509_cert cert)
     hx509_xfree(issuer_data.data);
     hx509_xfree(subject_data.data);
 
+    /* Note to static analyzers: `o' is still referred to via globals */
     return 0;
 }
 
@@ -619,7 +622,11 @@ add_certificate(const char *cert_file,
 
     if (pin) {
 	char *str;
-	asprintf(&str, "PASS:%s", pin);
+	ret = asprintf(&str, "PASS:%s", pin);
+	if (ret == -1 || !str) {
+	    st_logf("failed to allocate memory\n");
+	    return CKR_GENERAL_ERROR;
+	}
 
 	hx509_lock_init(context, &lock);
 	hx509_lock_command_string(lock, str);
@@ -815,45 +822,26 @@ func_not_supported(void)
 static char *
 get_config_file_for_user(void)
 {
-    char *fn = NULL;
+    char *fn;
+    int ret;
 
-#ifndef _WIN32
-    char *home = NULL;
-
-    if (!issuid()) {
-        fn = getenv("SOFTPKCS11RC");
-        if (fn)
-            fn = strdup(fn);
-        home = getenv("HOME");
-    }
-    if (fn == NULL && home == NULL) {
-        struct passwd *pw = getpwuid(getuid());
-        if(pw != NULL)
-            home = pw->pw_dir;
-    }
+    fn = secure_getenv("SOFTPKCS11RC");
+    if (fn)
+        fn = strdup(fn);
     if (fn == NULL) {
-        if (home)
-            asprintf(&fn, "%s/.soft-token.rc", home);
-        else
+        char homebuf[MAX_PATH];
+        const char *home = roken_get_appdatadir(homebuf, sizeof(homebuf));
+
+        if (home) {
+            ret = asprintf(&fn, "%s/.soft-token.rc", home);
+	    if (ret == -1)
+		fn = NULL;
+        } else {
+#ifndef WIN32
             fn = strdup("/etc/soft-token.rc");
+#endif
+        }
     }
-#else  /* Windows */
-
-    char appdatafolder[MAX_PATH];
-
-    fn = getenv("SOFTPKCS11RC");
-
-    /* Retrieve the roaming AppData folder for the current user.  The
-       current user is the user account represented by the current
-       thread token. */
-
-    if (fn == NULL &&
-        SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdatafolder))) {
-
-        asprintf(&fn, "%s\\.soft-token.rc", appdatafolder);
-    }
-
-#endif  /* _WIN32 */
 
     return fn;
 }
@@ -1081,7 +1069,7 @@ C_GetMechanismList(CK_SLOT_ID slotID,
     *pulCount = 1;
     if (pMechanismList == NULL_PTR)
 	return CKR_OK;
-    pMechanismList[1] = CKM_RSA_PKCS;
+    pMechanismList[0] = CKM_RSA_PKCS;
 
     return CKR_OK;
 }
@@ -1209,8 +1197,13 @@ C_Login(CK_SESSION_HANDLE hSession,
     VERIFY_SESSION_HANDLE(hSession, NULL);
 
     if (pPin != NULL_PTR) {
-	asprintf(&pin, "%.*s", (int)ulPinLen, pPin);
-	st_logf("type: %d password: %s\n", (int)userType, pin);
+	int aret;
+
+	aret = asprintf(&pin, "%.*s", (int)ulPinLen, pPin);
+	if (aret != -1 && pin)
+		st_logf("type: %d password: %s\n", (int)userType, pin);
+	else
+		st_logf("memory error: asprintf failed\n");
     }
 
     /*

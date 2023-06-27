@@ -138,13 +138,9 @@ krb5_copy_creds (krb5_context context,
 {
     krb5_creds *c;
 
-    c = malloc (sizeof (*c));
-    if (c == NULL) {
-	krb5_set_error_message (context, ENOMEM,
-				N_("malloc: out of memory", ""));
-	return ENOMEM;
-    }
-    memset (c, 0, sizeof(*c));
+    c = calloc(1, sizeof(*c));
+    if (c == NULL)
+	return krb5_enomem(context);
     *outcred = c;
     return krb5_copy_creds_contents (context, incred, c);
 }
@@ -164,8 +160,9 @@ krb5_copy_creds (krb5_context context,
 KRB5_LIB_FUNCTION krb5_error_code KRB5_LIB_CALL
 krb5_free_creds (krb5_context context, krb5_creds *c)
 {
-    krb5_free_cred_contents (context, c);
-    free (c);
+    if (c != NULL)
+        krb5_free_cred_contents(context, c);
+    free(c);
     return 0;
 }
 
@@ -193,7 +190,7 @@ krb5_times_equal(const krb5_times *a, const krb5_times *b)
  * - KRB5_TC_MATCH_TIMES Compares only the expiration times of the creds.
  * - KRB5_TC_MATCH_AUTHDATA Compares the authdata fields.
  * - KRB5_TC_MATCH_2ND_TKT Compares the second tickets (used by user-to-user authentication).
- * - KRB5_TC_MATCH_IS_SKEY Compares the existance of the second ticket.
+ * - KRB5_TC_MATCH_IS_SKEY Compares the existence of the second ticket.
  *
  * @param context Kerberos 5 context.
  * @param whichfields which fields to compare.

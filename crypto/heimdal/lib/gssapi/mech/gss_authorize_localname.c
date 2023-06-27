@@ -45,7 +45,7 @@ mech_authorize_localname(OM_uint32 *minor_status,
     OM_uint32 major_status = GSS_S_NAME_NOT_MN;
     struct _gss_mechanism_name *mn;
 
-    HEIM_SLIST_FOREACH(mn, &name->gn_mn, gmn_link) {
+    HEIM_TAILQ_FOREACH(mn, &name->gn_mn, gmn_link) {
         gssapi_mech_interface m = mn->gmn_mech;
 
         if (m->gm_authorize_localname == NULL) {
@@ -56,7 +56,7 @@ mech_authorize_localname(OM_uint32 *minor_status,
         major_status = m->gm_authorize_localname(minor_status,
                                                  mn->gmn_name,
                                                  &user->gn_value,
-                                                 &user->gn_type);
+                                                 user->gn_type);
         if (major_status != GSS_S_UNAUTHORIZED)
             break;
     }
@@ -75,7 +75,7 @@ attr_authorize_localname(OM_uint32 *minor_status,
     OM_uint32 major_status = GSS_S_UNAVAILABLE;
     int more = -1;
 
-    if (!gss_oid_equal(&user->gn_type, GSS_C_NT_USER_NAME))
+    if (!gss_oid_equal(user->gn_type, GSS_C_NT_USER_NAME))
         return GSS_S_BAD_NAMETYPE;
 
     while (more != 0 && major_status != GSS_S_COMPLETE) {
@@ -114,8 +114,8 @@ attr_authorize_localname(OM_uint32 *minor_status,
 
 GSSAPI_LIB_FUNCTION OM_uint32 GSSAPI_LIB_CALL
 gss_authorize_localname(OM_uint32 *minor_status,
-	                const gss_name_t gss_name,
-	                const gss_name_t gss_user)
+	                gss_const_name_t gss_name,
+	                gss_const_name_t gss_user)
 
 {
     OM_uint32 major_status;
@@ -134,7 +134,7 @@ gss_authorize_localname(OM_uint32 *minor_status,
      * not possible to make this check.
      */
 #if 0
-    if (HEIM_SLIST_FIRST(&user->gn_mn) != NULL)
+    if (HEIM_TAILQ_FIRST(&user->gn_mn) != NULL)
         return GSS_S_BAD_NAME;
 #endif
 
@@ -164,7 +164,7 @@ gss_authorize_localname(OM_uint32 *minor_status,
 }
 
 GSSAPI_LIB_FUNCTION int GSSAPI_LIB_CALL
-gss_userok(const gss_name_t name,
+gss_userok(gss_const_name_t name,
            const char *user)
 {
     OM_uint32 major_status, minor_status;

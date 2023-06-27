@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Kungliga Tekniska Högskolan
+ * Copyright (c) 2009 Kungliga Tekniska HÃ¶gskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -33,6 +33,7 @@
  * SUCH DAMAGE.
  */
 
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <krb5-types.h>
@@ -46,8 +47,8 @@ static int help_flag;
 static int version_flag;
 
 static struct getargs args[] = {
-    {	"help",		'h',	arg_flag,   &help_flag },
-    {	"version",	'v',	arg_flag,   &version_flag }
+    {	"help",		'h',	arg_flag,   &help_flag,    NULL, NULL },
+    {	"version",	'v',	arg_flag,   &version_flag, NULL, NULL }
 };
 
 static int num_args = sizeof(args) / sizeof(args[0]);
@@ -60,9 +61,11 @@ usage(int ret)
 }
 
 static void
-reply(void *ctx, int errorcode, heim_idata *reply, heim_icred cred)
+reply(void *ctx, int errorcode, heim_idata *rep, heim_icred cred)
 {
-    printf("got reply\n");
+    printf("got reply errorcode %d, rep %.*s\n", errorcode,
+           rep->length < INT_MAX ? (int)rep->length : INT_MAX,
+           (char *)rep->data);
     heim_ipc_semaphore_signal((heim_isemaphore)ctx); /* tell caller we are done */
 }
 
@@ -73,13 +76,18 @@ test_ipc(const char *service)
     heim_idata req, rep;
     heim_ipc ipc;
     int ret;
+    char buf[128];
+
+    snprintf(buf, sizeof(buf), "testing heim IPC via %s", service);
+
+    printf("%s\n", buf);
 
     ret = heim_ipc_init_context(service, &ipc);
     if (ret)
 	errx(1, "heim_ipc_init_context: %d", ret);
 
-    req.length = 0;
-    req.data = NULL;
+    req.length = strlen(buf);
+    req.data = buf;
 
     ret = heim_ipc_call(ipc, &req, &rep, NULL);
     if (ret)
@@ -122,6 +130,9 @@ main(int argc, char **argv)
 #endif
     test_ipc("ANY:org.h5l.test-ipc");
     test_ipc("UNIX:org.h5l.test-ipc");
+#ifdef HAVE_DOOR_CREATE
+    test_ipc("DOOR:org.h5l.test-ipc");
+#endif
 
     return 0;
 }

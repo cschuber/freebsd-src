@@ -33,20 +33,6 @@
 
 #include "kdc_locl.h"
 
-/* Should we enable the HTTP hack? */
-int enable_http = -1;
-
-/* Log over requests to the KDC */
-const char *request_log;
-
-/* A string describing on what ports to listen */
-const char *port_str;
-
-krb5_addresses explicit_addresses;
-
-size_t max_request_udp;
-size_t max_request_tcp;
-
 /*
  * a tuple describing on what to listen
  */
@@ -61,6 +47,7 @@ struct port_desc{
 
 static struct port_desc *ports;
 static size_t num_ports;
+static pid_t bonjour_pid = -1;
 
 /*
  * add `family, port, protocol' to the list with duplicate suppresion.
@@ -272,14 +259,18 @@ init_socket(krb5_context context,
 	d->s = rk_INVALID_SOCKET;
 	return;
     }
+    rk_cloexec(d->s);
 #if defined(HAVE_SETSOCKOPT) && defined(SOL_SOCKET) && defined(SO_REUSEADDR)
     {
 	int one = 1;
-	setsockopt(d->s, SOL_SOCKET, SO_REUSEADDR, (void *)&one, sizeof(one));
+        (void) setsockopt(d->s, SOL_SOCKET, SO_REUSEADDR, (void *)&one,
+                          sizeof(one));
     }
 #endif
     d->type = type;
     d->port = port;
+
+    socket_set_nonblocking(d->s, 1);
 
     if(rk_IS_SOCKET_ERROR(bind(d->s, sa, sa_size))){
 	char a_str[256];
@@ -301,6 +292,7 @@ init_socket(krb5_context context,
 	d->s = rk_INVALID_SOCKET;
 	return;
     }
+    socket_set_keepalive(d->s, 1);
 }
 
 /*
@@ -343,7 +335,7 @@ init_sockets(krb5_context context,
 		krb5_print_address (&addresses.val[j], a_str,
 				    sizeof(a_str), &len);
 
-		kdc_log(context, config, 5, "listening on %s port %u/%s",
+		kdc_log(context, config, 3, "listening on %s port %u/%s",
 			a_str,
 			ntohs(ports[i].port),
 			(ports[i].type == SOCK_STREAM) ? "tcp" : "udp");
@@ -402,7 +394,7 @@ send_reply(krb5_context context,
 	   struct descr *d,
 	   krb5_data *reply)
 {
-    kdc_log(context, config, 5,
+    kdc_log(context, config, 4,
 	    "sending %lu bytes to %s", (unsigned long)reply->length,
 	    d->addr_string);
     if(prependlength){
@@ -413,13 +405,13 @@ send_reply(krb5_context context,
 	l[3] = reply->length & 0xff;
 	if(rk_IS_SOCKET_ERROR(sendto(d->s, l, sizeof(l), 0, d->sa, d->sock_len))) {
 	    kdc_log (context, config,
-		     0, "sendto(%s): %s", d->addr_string,
+		     1, "sendto(%s): %s", d->addr_string,
 		     strerror(rk_SOCK_ERRNO));
 	    return;
 	}
     }
     if(rk_IS_SOCKET_ERROR(sendto(d->s, reply->data, reply->length, 0, d->sa, d->sock_len))) {
-	kdc_log (context, config, 0, "sendto(%s): %s", d->addr_string,
+	kdc_log (context, config, 1, "sendto(%s): %s", d->addr_string,
 		 strerror(rk_SOCK_ERRNO));
 	return;
     }
@@ -453,7 +445,7 @@ do_request(krb5_context context,
 	krb5_data_free(&reply);
     }
     if(ret)
-	kdc_log(context, config, 0,
+	kdc_log(context, config, 1,
 		"Failed processing %lu byte request from %s",
 		(unsigned long)len, d->addr_string);
 }
@@ -471,16 +463,18 @@ handle_udp(krb5_context context,
     ssize_t n;
 
     buf = malloc(max_request_udp);
-    if(buf == NULL){
-	kdc_log(context, config, 0, "Failed to allocate %lu bytes", (unsigned long)max_request_udp);
+    if (buf == NULL){
+	kdc_log(context, config, 1, "Failed to allocate %lu bytes",
+	        (unsigned long)max_request_udp);
 	return;
     }
 
     d->sock_len = sizeof(d->__ss);
     n = recvfrom(d->s, buf, max_request_udp, 0, d->sa, &d->sock_len);
-    if(rk_IS_SOCKET_ERROR(n))
-	krb5_warn(context, rk_SOCK_ERRNO, "recvfrom");
-    else {
+    if (rk_IS_SOCKET_ERROR(n)) {
+	if (rk_SOCK_ERRNO != EAGAIN && rk_SOCK_ERRNO != EINTR)
+	    krb5_warn(context, rk_SOCK_ERRNO, "recvfrom");
+    } else {
 	addr_to_string (context, d->sa, d->sock_len,
 			d->addr_string, sizeof(d->addr_string));
 	if ((size_t)n == max_request_udp) {
@@ -523,15 +517,21 @@ static int
 de_http(char *buf)
 {
     unsigned char *p, *q;
-    for(p = q = (unsigned char *)buf; *p; p++, q++) {
-	if(*p == '%' && isxdigit(p[1]) && isxdigit(p[2])) {
-	    unsigned int x;
-	    if(sscanf((char *)p + 1, "%2x", &x) != 1)
+    unsigned int x;
+
+    for (p = q = (unsigned char *)buf; *p; p++, q++) {
+	if (*p == '%') {
+	    if (!(isxdigit(p[1]) && isxdigit(p[2])))
 		return -1;
+
+	    if (sscanf((char *)p + 1, "%2x", &x) != 1)
+		return -1;
+
 	    *q = x;
 	    p += 2;
-	} else
+	} else {
 	    *q = *p;
+	}
     }
     *q = '\0';
     return 0;
@@ -556,7 +556,8 @@ add_new_tcp (krb5_context context,
     d[child].sock_len = sizeof(d[child].__ss);
     s = accept(d[parent].s, d[child].sa, &d[child].sock_len);
     if(rk_IS_BAD_SOCKET(s)) {
-	krb5_warn(context, rk_SOCK_ERRNO, "accept");
+	if (rk_SOCK_ERRNO != EAGAIN && rk_SOCK_ERRNO != EINTR)
+	    krb5_warn(context, rk_SOCK_ERRNO, "accept");
 	return;
     }
 
@@ -592,14 +593,14 @@ grow_descr (krb5_context context,
 
 	grow = max(1024, d->len + n);
 	if (d->size + grow > max_request_tcp) {
-	    kdc_log(context, config, 0, "Request exceeds max request size (%lu bytes).",
+	    kdc_log(context, config, 2, "Request exceeds max request size (%lu bytes).",
 		    (unsigned long)d->size + grow);
 	    clear_descr(d);
 	    return -1;
 	}
 	tmp = realloc (d->buf, d->size + grow);
 	if (tmp == NULL) {
-	    kdc_log(context, config, 0, "Failed to re-allocate %lu bytes.",
+	    kdc_log(context, config, 1, "Failed to re-allocate %lu bytes.",
 		    (unsigned long)d->size + grow);
 	    clear_descr(d);
 	    return -1;
@@ -620,15 +621,22 @@ handle_vanilla_tcp (krb5_context context,
 		    krb5_kdc_configuration *config,
 		    struct descr *d)
 {
+    krb5_error_code ret;
     krb5_storage *sp;
     uint32_t len;
 
+    if (d->len < 4)
+        return 0;
     sp = krb5_storage_from_mem(d->buf, d->len);
     if (sp == NULL) {
-	kdc_log (context, config, 0, "krb5_storage_from_mem failed");
+	kdc_log (context, config, 1, "krb5_storage_from_mem failed");
 	return -1;
     }
-    krb5_ret_uint32(sp, &len);
+    ret = krb5_ret_uint32(sp, &len);
+    if (ret) {
+	kdc_log(context, config, 4, "failed to read request length");
+	return -1;
+    }
     krb5_storage_free(sp);
     if(d->len - 4 >= len) {
 	memmove(d->buf, d->buf + 4, d->len - 4);
@@ -663,39 +671,39 @@ handle_http_tcp (krb5_context context,
     p = NULL;
     t = strtok_r(s, " \t", &p);
     if (t == NULL) {
-	kdc_log(context, config, 0,
+	kdc_log(context, config, 2,
 		"Missing HTTP operand (GET) request from %s", d->addr_string);
 	return -1;
     }
 
     t = strtok_r(NULL, " \t", &p);
     if(t == NULL) {
-	kdc_log(context, config, 0,
+	kdc_log(context, config, 2,
 		"Missing HTTP GET data in request from %s", d->addr_string);
 	return -1;
     }
 
     data = malloc(strlen(t));
     if (data == NULL) {
-	kdc_log(context, config, 0, "Failed to allocate %lu bytes",
+	kdc_log(context, config, 1, "Failed to allocate %lu bytes",
 		(unsigned long)strlen(t));
 	return -1;
     }
     if(*t == '/')
 	t++;
     if(de_http(t) != 0) {
-	kdc_log(context, config, 0, "Malformed HTTP request from %s", d->addr_string);
-	kdc_log(context, config, 5, "HTTP request: %s", t);
+	kdc_log(context, config, 2, "Malformed HTTP request from %s", d->addr_string);
+	kdc_log(context, config, 4, "HTTP request: %s", t);
 	free(data);
 	return -1;
     }
     proto = strtok_r(NULL, " \t", &p);
     if (proto == NULL) {
-	kdc_log(context, config, 0, "Malformed HTTP request from %s", d->addr_string);
+	kdc_log(context, config, 2, "Malformed HTTP request from %s", d->addr_string);
 	free(data);
 	return -1;
     }
-    len = base64_decode(t, data);
+    len = rk_base64_decode(t, data);
     if(len <= 0){
 	const char *msg =
 	    " 404 Not found\r\n"
@@ -708,16 +716,16 @@ handle_http_tcp (krb5_context context,
 	    "<H1>404 Not found</H1>\r\n"
 	    "That page doesn't exist, maybe you are looking for "
 	    "<A HREF=\"http://www.h5l.org/\">Heimdal</A>?\r\n";
-	kdc_log(context, config, 0, "HTTP request from %s is non KDC request", d->addr_string);
-	kdc_log(context, config, 5, "HTTP request: %s", t);
+	kdc_log(context, config, 2, "HTTP request from %s is non KDC request", d->addr_string);
+	kdc_log(context, config, 4, "HTTP request: %s", t);
 	free(data);
 	if (rk_IS_SOCKET_ERROR(send(d->s, proto, strlen(proto), 0))) {
-	    kdc_log(context, config, 0, "HTTP write failed: %s: %s",
+	    kdc_log(context, config, 1, "HTTP write failed: %s: %s",
 		    d->addr_string, strerror(rk_SOCK_ERRNO));
 	    return -1;
 	}
 	if (rk_IS_SOCKET_ERROR(send(d->s, msg, strlen(msg), 0))) {
-	    kdc_log(context, config, 0, "HTTP write failed: %s: %s",
+	    kdc_log(context, config, 1, "HTTP write failed: %s: %s",
 		    d->addr_string, strerror(rk_SOCK_ERRNO));
 	    return -1;
 	}
@@ -733,13 +741,13 @@ handle_http_tcp (krb5_context context,
 	    "Content-transfer-encoding: binary\r\n\r\n";
 	if (rk_IS_SOCKET_ERROR(send(d->s, proto, strlen(proto), 0))) {
 	    free(data);
-	    kdc_log(context, config, 0, "HTTP write failed: %s: %s",
+	    kdc_log(context, config, 1, "HTTP write failed: %s: %s",
 		    d->addr_string, strerror(rk_SOCK_ERRNO));
 	    return -1;
 	}
 	if (rk_IS_SOCKET_ERROR(send(d->s, msg, strlen(msg), 0))) {
 	    free(data);
-	    kdc_log(context, config, 0, "HTTP write failed: %s: %s",
+	    kdc_log(context, config, 1, "HTTP write failed: %s: %s",
 		    d->addr_string, strerror(rk_SOCK_ERRNO));
 	    return -1;
 	}
@@ -750,6 +758,38 @@ handle_http_tcp (krb5_context context,
     d->len = len;
     free(data);
     return 1;
+}
+
+static int
+http1_request_taste(const unsigned char *req, size_t len)
+{
+    return !!((len >= sizeof("GET ") - 1 &&
+               memcmp(req, "GET ", sizeof("GET ") - 1) == 0) ||
+              (len >= sizeof("HEAD ") - 1 &&
+               memcmp(req, "HEAD ", sizeof("HEAD ") - 1) == 0));
+}
+
+static int
+http1_request_is_complete(const unsigned char *req, size_t len)
+{
+
+    return http1_request_taste(req, len) &&
+        memmem(req, len, "\r\n\r\n", sizeof("\r\n\r\n") - 4) != NULL;
+
+    /*
+     * For POST (the MSFT variant of this protocol) we'll need something like
+     * this (plus check for Content-Length/Transfer-Encoding):
+     *
+     *  const unsigned char *body;
+     *  if ((body = memmem(req, len, "\r\n\r\n", sizeof("\r\n\r\n") - 4)) == NULL)
+     *      return 0;
+     *  body += sizeof("\r\n\r\n") - 4;
+     *  len -= (body - req);
+     *  return memmem(body, len, "\r\n\r\n", sizeof("\r\n\r\n") - 4) != NULL;
+     *
+     * Since the POST-based variant runs over HTTPS, we'll probably implement
+     * that in a proxy instead of here.
+     */
 }
 
 /*
@@ -790,27 +830,23 @@ handle_tcp(krb5_context context,
     d[idx].len += n;
     if(d[idx].len > 4 && d[idx].buf[0] == 0) {
 	ret = handle_vanilla_tcp (context, config, &d[idx]);
-    } else if(enable_http &&
-	      d[idx].len >= 4 &&
-	      strncmp((char *)d[idx].buf, "GET ", 4) == 0 &&
-	      strncmp((char *)d[idx].buf + d[idx].len - 4,
-		      "\r\n\r\n", 4) == 0) {
+    } else if (enable_http &&
+               http1_request_taste(d[idx].buf, d[idx].len)) {
 
-        /* remove the trailing \r\n\r\n so the string is NUL terminated */
-        d[idx].buf[d[idx].len - 4] = '\0';
-
-	ret = handle_http_tcp (context, config, &d[idx]);
-	if (ret < 0)
-	    clear_descr (d + idx);
+        if (http1_request_is_complete(d[idx].buf, d[idx].len)) {
+            /* NUL-terminate at the request header ending \r\n\r\n */
+            d[idx].buf[d[idx].len - 4] = '\0';
+            ret = handle_http_tcp (context, config, &d[idx]);
+        }
     } else if (d[idx].len > 4) {
 	kdc_log (context, config,
-		 0, "TCP data of strange type from %s to %s/%d",
+		 2, "TCP data of strange type from %s to %s/%d",
 		 d[idx].addr_string, descr_type(d + idx),
 		 ntohs(d[idx].port));
 	if (d[idx].buf[0] & 0x80) {
 	    krb5_data reply;
 
-	    kdc_log (context, config, 0, "TCP extension not supported");
+	    kdc_log (context, config, 2, "TCP extension not supported");
 
 	    ret = krb5_mk_error(context,
 				KRB5KRB_ERR_FIELD_TOOLONG,
@@ -829,27 +865,87 @@ handle_tcp(krb5_context context,
 	clear_descr(d + idx);
 	return;
     }
-    if (ret < 0)
-	return;
-    else if (ret == 1) {
+
+    /*
+     * ret == 0 -> not enough of request buffered -> wait for more
+     * ret == 1 -> go ahead and perform the request
+     * ret != 0 (really, < 0) -> error, probably ENOMEM, close connection
+     */
+    if (ret == 1)
 	do_request(context, config,
 		   d[idx].buf, d[idx].len, TRUE, &d[idx]);
+
+    /*
+     * Note: this means we don't keep the connection open even where we
+     * the protocol permits it.
+     */
+    if (ret != 0)
 	clear_descr(d + idx);
-    }
 }
 
-void
-loop(krb5_context context,
-     krb5_kdc_configuration *config)
+#ifdef HAVE_FORK
+static void
+handle_islive(int fd)
 {
-    struct descr *d;
-    unsigned int ndescr;
+    char buf;
+    int ret;
 
-    ndescr = init_sockets(context, config, &d);
-    if(ndescr <= 0)
-	krb5_errx(context, 1, "No sockets!");
-    kdc_log(context, config, 0, "KDC started");
-    while(exit_flag == 0){
+    ret = read(fd, &buf, 1);
+    if (ret != 1)
+	exit_flag = -1;
+}
+#endif
+
+static krb5_boolean
+realloc_descrs(struct descr **d, unsigned int *ndescr)
+{
+    struct descr *tmp;
+    size_t i;
+
+    tmp = realloc(*d, (*ndescr + 4) * sizeof(**d));
+    if(tmp == NULL)
+        return FALSE;
+
+    *d = tmp;
+    reinit_descrs (*d, *ndescr);
+    memset(*d + *ndescr, 0, 4 * sizeof(**d));
+    for(i = *ndescr; i < *ndescr + 4; i++)
+        init_descr (*d + i);
+
+    *ndescr += 4;
+
+    return TRUE;
+}
+
+static int
+next_min_free(krb5_context context, struct descr **d, unsigned int *ndescr)
+{
+    size_t i;
+    int min_free;
+
+    for(i = 0; i < *ndescr; i++) {
+        int s = (*d + i)->s;
+        if(rk_IS_BAD_SOCKET(s))
+            return i;
+    }
+
+    min_free = *ndescr;
+    if(!realloc_descrs(d, ndescr)) {
+        min_free = -1;
+        krb5_warnx(context, "No memory");
+    }
+
+    return min_free;
+}
+
+static void
+loop(krb5_context context, krb5_kdc_configuration *config,
+     struct descr **dp, unsigned int *ndescrp, int islive)
+{
+    struct descr *d = *dp;
+    unsigned int ndescr = *ndescrp;
+
+    while (exit_flag == 0) {
 	struct timeval tmout;
 	fd_set fds;
 	int min_free = -1;
@@ -857,18 +953,22 @@ loop(krb5_context context,
 	size_t i;
 
 	FD_ZERO(&fds);
-	for(i = 0; i < ndescr; i++) {
-	    if(!rk_IS_BAD_SOCKET(d[i].s)){
-		if(d[i].type == SOCK_STREAM &&
+        if (islive > -1) {
+            FD_SET(islive, &fds);
+            max_fd = islive;
+        }
+	for (i = 0; i < ndescr; i++) {
+	    if (!rk_IS_BAD_SOCKET(d[i].s)) {
+		if (d[i].type == SOCK_STREAM &&
 		   d[i].timeout && d[i].timeout < time(NULL)) {
-		    kdc_log(context, config, 1,
+		    kdc_log(context, config, 2,
 			    "TCP-connection from %s expired after %lu bytes",
 			    d[i].addr_string, (unsigned long)d[i].len);
 		    clear_descr(&d[i]);
 		    continue;
 		}
 #ifndef NO_LIMIT_FD_SETSIZE
-		if(max_fd < d[i].s)
+		if (max_fd < d[i].s)
 		    max_fd = d[i].s;
 #ifdef FD_SETSIZE
 		if (max_fd >= FD_SETSIZE)
@@ -876,22 +976,6 @@ loop(krb5_context context,
 #endif
 #endif
 		FD_SET(d[i].s, &fds);
-	    } else if(min_free < 0 || i < (size_t)min_free)
-		min_free = i;
-	}
-	if(min_free == -1){
-	    struct descr *tmp;
-	    tmp = realloc(d, (ndescr + 4) * sizeof(*d));
-	    if(tmp == NULL)
-		krb5_warnx(context, "No memory");
-	    else {
-		d = tmp;
-		reinit_descrs (d, ndescr);
-		memset(d + ndescr, 0, 4 * sizeof(*d));
-		for(i = ndescr; i < ndescr + 4; i++)
-		    init_descr (&d[i]);
-		min_free = ndescr;
-		ndescr += 4;
 	    }
 	}
 
@@ -905,23 +989,331 @@ loop(krb5_context context,
 		krb5_warn(context, rk_SOCK_ERRNO, "select");
 	    break;
 	default:
-	    for(i = 0; i < ndescr; i++)
-		if(!rk_IS_BAD_SOCKET(d[i].s) && FD_ISSET(d[i].s, &fds)) {
-		    if(d[i].type == SOCK_DGRAM)
+#ifdef HAVE_FORK
+	    if (islive > -1 && FD_ISSET(islive, &fds))
+		handle_islive(islive);
+#endif
+	    for (i = 0; i < ndescr; i++)
+		if (!rk_IS_BAD_SOCKET(d[i].s) && FD_ISSET(d[i].s, &fds)) {
+		    min_free = next_min_free(context, dp, ndescrp);
+                    ndescr = *ndescrp;
+                    d = *dp;
+
+		    if (d[i].type == SOCK_DGRAM)
 			handle_udp(context, config, &d[i]);
-		    else if(d[i].type == SOCK_STREAM)
+		    else if (d[i].type == SOCK_STREAM)
 			handle_tcp(context, config, d, i, min_free);
 		}
 	}
     }
-    if (0);
+
+    switch (exit_flag) {
+    case -1:
+	kdc_log(context, config, 0,
+                "KDC worker process exiting because KDC master exited.");
+	break;
 #ifdef SIGXCPU
-    else if(exit_flag == SIGXCPU)
+    case SIGXCPU:
 	kdc_log(context, config, 0, "CPU time limit exceeded");
+	break;
 #endif
-    else if(exit_flag == SIGINT || exit_flag == SIGTERM)
+    case SIGINT:
+    case SIGTERM:
 	kdc_log(context, config, 0, "Terminated");
-    else
+	break;
+    default:
 	kdc_log(context, config, 0, "Unexpected exit reason: %d", exit_flag);
-    free (d);
+	break;
+    }
+}
+
+#ifdef __APPLE__
+static void
+bonjour_kid(krb5_context context, krb5_kdc_configuration *config, const char *argv0, int *islive)
+{
+    char buf;
+
+    if (do_bonjour > 0) {
+	bonjour_announce(context, config);
+
+	while (read(0, &buf, 1) == 1)
+	    continue;
+	_exit(0);
+    }
+
+    if ((bonjour_pid = fork()) != 0)
+	return;
+
+    close(islive[0]);
+    if (dup2(islive[1], 0) == -1)
+	err(1, "failed to announce with bonjour (dup)");
+    if (islive[1] != 0)
+        close(islive[1]);
+    execlp(argv0, "kdc", "--bonjour", NULL);
+    err(1, "failed to announce with bonjour (exec)");
+}
+#endif
+
+#ifdef HAVE_FORK
+static void
+kill_kids(pid_t *pids, int max_kids, int sig)
+{
+    int i;
+
+    for (i=0; i < max_kids; i++)
+	if (pids[i] > 0)
+	    kill(sig, pids[i]);
+    if (bonjour_pid > 0)
+        kill(sig, bonjour_pid);
+}
+
+static int
+reap_kid(krb5_context context, krb5_kdc_configuration *config,
+	 pid_t *pids, int max_kids, int options)
+{
+    pid_t pid;
+    char *what = "untracked";
+    int status;
+    int i = 0; /* quiet warnings */
+    int ret = 0;
+    int level = 3;
+    const char *sev = "info: ";
+
+    pid = waitpid(-1, &status, options);
+    if (pid <= 0)
+	return 0;
+
+    if (pid == bonjour_pid) {
+        bonjour_pid = (pid_t)-1;
+        what = "bonjour";
+    } else {
+        for (i=0; i < max_kids; i++) {
+            if (pids[i] == pid) {
+                pids[i] = (pid_t)-1;
+                what = "worker";
+                ret = 1;
+                break;
+            }
+        }
+
+        if (i == max_kids) {
+            /* should not happen */
+            sev = "warning: ";
+            level = 2;
+        }
+    }
+
+    if (WIFEXITED(status))
+        kdc_log(context, config, level,
+                "%sKDC reaped %s process: %d, exit status: %d",
+                sev, what, (int)pid, WEXITSTATUS(status));
+    else if (WIFSIGNALED(status))
+        kdc_log(context, config, level,
+                "%sKDC reaped %s process: %d, term signal %d%s",
+                sev, what, (int)pid, WTERMSIG(status),
+                WCOREDUMP(status) ? " (core dumped)" : "");
+    else
+        kdc_log(context, config, level, "%sKDC reaped %s process: %d",
+                sev, what, (int)pid);
+
+    return ret;
+}
+
+static int
+reap_kids(krb5_context context, krb5_kdc_configuration *config,
+	  pid_t *pids, int max_kids)
+{
+    int reaped = 0;
+
+    for (;;) {
+	if (reap_kid(context, config, pids, max_kids, WNOHANG) == 0)
+	    break;
+	reaped++;
+    }
+
+    return reaped;
+}
+
+static void
+select_sleep(int microseconds)
+{
+    struct timeval tv;
+
+    tv.tv_sec = microseconds / 1000000;
+    tv.tv_usec = microseconds % 1000000;
+    select(0, NULL, NULL, NULL, &tv);
+}
+#endif
+
+void
+start_kdc(krb5_context context,
+	  krb5_kdc_configuration *config, const char *argv0)
+{
+    struct timeval tv1;
+    struct timeval tv2;
+    struct descr *d;
+    unsigned int ndescr;
+    pid_t pid = -1;
+#ifdef HAVE_FORK
+    pid_t *pids;
+    int max_kdcs = config->num_kdc_processes;
+    int num_kdcs = 0;
+    int i;
+    int islive[2];
+#endif
+
+#ifdef __APPLE__
+    if (!testing_flag && do_bonjour > 0)
+        bonjour_kid(context, config, argv0, NULL);
+#endif
+
+#ifdef HAVE_FORK
+#ifdef _SC_NPROCESSORS_ONLN
+    if (max_kdcs < 1)
+	max_kdcs = sysconf(_SC_NPROCESSORS_ONLN);
+#endif
+
+    if (max_kdcs < 1)
+	max_kdcs = 1;
+
+    pids = calloc(max_kdcs, sizeof(*pids));
+    if (pids == NULL)
+	krb5_err(context, 1, errno, "malloc");
+
+    /*
+     * We open a socketpair of which we hand one end to each of our kids.
+     * When we exit, for whatever reason, the children will notice an EOF
+     * on their end and be able to cleanly exit.
+     */
+
+    if (socketpair(PF_UNIX, SOCK_STREAM, 0, islive) == -1)
+	krb5_errx(context, 1, "socketpair");
+    socket_set_nonblocking(islive[1], 1);
+#endif
+
+    ndescr = init_sockets(context, config, &d);
+    if(ndescr <= 0)
+	krb5_errx(context, 1, "No sockets!");
+
+#ifdef HAVE_FORK
+
+# ifdef __APPLE__
+    if (!testing_flag && do_bonjour < 0)
+        bonjour_kid(context, config, argv0, islive);
+# endif
+
+    kdc_log(context, config, 3, "KDC started master process pid=%d", getpid());
+#else
+    kdc_log(context, config, 3, "KDC started pid=%d", getpid());
+#endif
+
+    roken_detach_finish(NULL, daemon_child);
+
+#ifdef HAVE_FORK
+    if (!testing_flag) {
+        /* Note that we might never execute the body of this loop */
+        while (exit_flag == 0) {
+
+            if (num_kdcs >= max_kdcs) {
+                num_kdcs -= reap_kid(context, config, pids, max_kdcs, 0);
+                continue;
+            }
+
+            if (num_kdcs > 0)
+                num_kdcs -= reap_kids(context, config, pids, max_kdcs);
+
+            pid = fork();
+            switch (pid) {
+            case 0:
+                close(islive[0]);
+                loop(context, config, &d, &ndescr, islive[1]);
+                exit(0);
+            case -1:
+                /* XXXrcd: hmmm, do something useful?? */
+                kdc_log(context, config, 1,
+                        "KDC master process could not fork worker process");
+                sleep(10);
+                break;
+            default:
+		for (i = 0; i < max_kdcs; i++) {
+		    if (pids[i] <= 0) {
+			pids[i] = pid;
+			break;
+		    }
+		}
+                if (i >= max_kdcs) {
+                    /* This should not happen */
+                    kdc_log(context, config, 1,
+                            "warning: forked untracked child process: %d",
+                            (int)pid);
+                }
+                kdc_log(context, config, 3, "KDC worker process started: %d",
+                        pid);
+                num_kdcs++;
+                /* Slow down the creation of KDCs... */
+                select_sleep(12500);
+                break;
+            }
+        }
+
+        /* Closing these sockets should cause the kids to die... */
+
+        close(islive[0]);
+        close(islive[1]);
+
+        /* Close our listener sockets before terminating workers */
+        for (i = 0; i < ndescr; ++i)
+            clear_descr(&d[i]);
+
+        gettimeofday(&tv1, NULL);
+        tv2 = tv1;
+
+        /* Reap every 10ms, terminate stragglers once a second, give up after 10 */
+        for (;;) {
+            struct timeval tv3;
+            num_kdcs -= reap_kids(context, config, pids, max_kdcs);
+            if (num_kdcs == 0 && bonjour_pid <= 0)
+                goto end;
+            /*
+             * Using select to sleep will fail with EINTR if we receive a
+             * SIGCHLD.  This is desirable.
+             */
+            select_sleep(10000);
+            gettimeofday(&tv3, NULL);
+            if (tv3.tv_sec - tv1.tv_sec > 10 ||
+                (tv3.tv_sec - tv1.tv_sec == 10 && tv3.tv_usec >= tv1.tv_usec))
+                break;
+            if (tv3.tv_sec - tv2.tv_sec > 1 ||
+                (tv3.tv_sec - tv2.tv_sec == 1 && tv3.tv_usec >= tv2.tv_usec)) {
+                kill_kids(pids, max_kdcs, SIGTERM);
+                tv2 = tv3;
+            }
+        }
+
+        /* Kill stragglers and reap every 200ms, give up after 15s */
+        for (;;) {
+            kill_kids(pids, max_kdcs, SIGKILL);
+            num_kdcs -= reap_kids(context, config, pids, max_kdcs);
+            if (num_kdcs == 0 && bonjour_pid <= 0)
+                break;
+            select_sleep(200000);
+            gettimeofday(&tv2, NULL);
+            if (tv2.tv_sec - tv1.tv_sec > 15 ||
+                (tv2.tv_sec - tv1.tv_sec == 15 && tv2.tv_usec >= tv1.tv_usec))
+                break;
+        }
+
+     end:
+        kdc_log(context, config, 3, "KDC master process exiting");
+    } else {
+        loop(context, config, &d, &ndescr, -1);
+        kdc_log(context, config, 3, "KDC exiting");
+    }
+    free(pids);
+#else
+    loop(context, config, &d, &ndescr, -1);
+    kdc_log(context, config, 3, "KDC exiting");
+#endif
+
+    free(d);
 }

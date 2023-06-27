@@ -40,7 +40,7 @@
 static void
 str2data (krb5_data *d,
 	  const char *fmt,
-	  ...) __attribute__ ((format (printf, 2, 3)));
+	  ...) __attribute__ ((__format__ (__printf__, 2, 3)));
 
 static void
 str2data (krb5_data *d,
@@ -302,6 +302,10 @@ process_reply (krb5_context context,
 	    _krb5_get_int(reply, &size, 4);
 	    if (size + 4 < len)
 		continue;
+	    if (sizeof(reply) - 4 < size) {
+		krb5_set_error_message(context, ERANGE, "size from server too large %s", host);
+		return ERANGE;
+	    }
 	    memmove(reply, reply + 4, size);
 	    len = size;
 	    break;
@@ -326,7 +330,7 @@ process_reply (krb5_context context,
 
     if (len < 6) {
 	str2data (result_string, "server %s sent to too short message "
-		  "(%zu bytes)", host, len);
+		  "(%llu bytes)", host, (unsigned long long)len);
 	*result_code = KRB5_KPASSWD_MALFORMED;
 	return 0;
     }
@@ -380,7 +384,7 @@ process_reply (krb5_context context,
     ap_rep_data.data = reply + 6;
     ap_rep_data.length  = (reply[4] << 8) | (reply[5]);
 
-    if (reply + len < (u_char *)ap_rep_data.data + ap_rep_data.length) {
+    if (len - 6 < ap_rep_data.length) {
 	str2data (result_string, "client: wrong AP len in reply");
 	*result_code = KRB5_KPASSWD_MALFORMED;
 	return 0;
@@ -474,7 +478,7 @@ typedef krb5_error_code (*kpwd_process_reply) (krb5_context,
 					       krb5_data *,
 					       const char *);
 
-static struct kpwd_proc {
+static const struct kpwd_proc {
     const char *name;
     int flags;
 #define SUPPORT_TCP	1
@@ -509,7 +513,7 @@ change_password_loop (krb5_context	context,
 		      int		*result_code,
 		      krb5_data		*result_code_string,
 		      krb5_data		*result_string,
-		      struct kpwd_proc	*proc)
+		      const struct kpwd_proc	*proc)
 {
     krb5_error_code ret;
     krb5_auth_context auth_context = NULL;
@@ -658,10 +662,10 @@ change_password_loop (krb5_context	context,
 
 #ifndef HEIMDAL_SMALLER
 
-static struct kpwd_proc *
+static const struct kpwd_proc *
 find_chpw_proto(const char *name)
 {
-    struct kpwd_proc *p;
+    const struct kpwd_proc *p;
     for (p = procs; p->name != NULL; p++) {
 	if (strcmp(p->name, name) == 0)
 	    return p;
@@ -691,9 +695,9 @@ krb5_change_password (krb5_context	context,
 		      int		*result_code,
 		      krb5_data		*result_code_string,
 		      krb5_data		*result_string)
-    KRB5_DEPRECATED_FUNCTION("Use X instead")
+    KRB5_DEPRECATED_FUNCTION("Use krb5_set_password instead")
 {
-    struct kpwd_proc *p = find_chpw_proto("change password");
+    const struct kpwd_proc *p = find_chpw_proto("change password");
 
     *result_code = KRB5_KPASSWD_MALFORMED;
     result_code_string->data = result_string->data = NULL;
@@ -714,7 +718,7 @@ krb5_change_password (krb5_context	context,
  * @param context a Keberos context
  * @param creds The initial kadmin/passwd for the principal or an admin principal
  * @param newpw The new password to set
- * @param targprinc if unset, the default principal is used.
+ * @param targprinc if unset, the client principal from creds is used
  * @param result_code Result code, KRB5_KPASSWD_SUCCESS is when password is changed.
  * @param result_code_string binary message from the server, contains
  * at least the result_code.
@@ -744,7 +748,7 @@ krb5_set_password(krb5_context context,
     krb5_data_zero(result_string);
 
     if (targprinc == NULL) {
-	ret = krb5_get_default_principal(context, &principal);
+	ret = krb5_copy_principal(context, creds->client, &principal);
 	if (ret)
 	    return ret;
     } else

@@ -24,10 +24,6 @@ typedef struct node {
   struct node  *llink, *rlink;
 } node_t;
 
-#ifndef __DECONST
-#define __DECONST(type, var)    ((type)(uintptr_t)(const void *)(var))
-#endif
-
 /*
  * find or insert datum into search tree
  *
@@ -61,7 +57,7 @@ rk_tsearch(const void *vkey, void **vrootp,
 	if (q != 0) {				/* make new node */
 		*rootp = q;			/* link new node to old */
 		/* LINTED const castaway ok */
-		q->key = __DECONST(void *, vkey); /* initialize new node */
+		q->key = rk_UNCONST(vkey); /* initialize new node */
 		q->llink = q->rlink = NULL;
 	}
 	return q;
@@ -117,14 +113,13 @@ rk_tdelete(const void * vkey, void ** vrootp,
 	int (*compar)(const void *, const void *))
 {
 	node_t **rootp = (node_t **)vrootp;
-	node_t *p, *q, *r;
+	node_t *q, *r;
 	int cmp;
 
-	if (rootp == NULL || (p = *rootp) == NULL)
+	if (rootp == NULL || *rootp == NULL)
 		return NULL;
 
 	while ((cmp = (*compar)(vkey, (*rootp)->key)) != 0) {
-		p = *rootp;
 		rootp = (cmp < 0) ?
 		    &(*rootp)->llink :		/* follow llink branch */
 		    &(*rootp)->rlink;		/* follow rlink branch */
@@ -148,7 +143,7 @@ rk_tdelete(const void * vkey, void ** vrootp,
 	}
 	free(*rootp);				/* D4: Free node */
 	*rootp = q;				/* link parent to new node */
-	return p;
+	return *rootp;
 }
 
 /*

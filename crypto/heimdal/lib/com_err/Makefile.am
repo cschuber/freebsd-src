@@ -2,7 +2,8 @@
 
 include $(top_srcdir)/Makefile.am.common
 
-YFLAGS = -d
+AM_YFLAGS = -d -o parse.c
+AM_LFLAGS = @FLEXNOUNPUTARGS@
 
 lib_LTLIBRARIES = libcom_err.la
 libcom_err_la_LDFLAGS = -version-info 2:3:1
@@ -13,7 +14,7 @@ endif
 
 libcom_err_la_LIBADD = $(LIB_libintl)
 
-bin_PROGRAMS = compile_et
+noinst_PROGRAMS = compile_et
 
 include_HEADERS = com_err.h com_right.h
 
@@ -42,6 +43,7 @@ strlcpy.c:
 
 EXTRA_DIST = \
 	NTMakefile \
+	com_err.3 \
 	compile_et-version.rc \
 	libcom_err-version.rc \
 	libcom_err-exports.def \

@@ -65,7 +65,7 @@ com_right_r(struct et_list *list, long code, char *str, size_t len)
 	    const char *msg = p->table->msgs[code - p->table->base];
 #ifdef LIBINTL
 	    char domain[12 + 20];
-	    snprintf(domain, sizeof(domain), "heim_com_err%d", p->table->base);
+	    snprintf(domain, sizeof(domain), "heim_com_err%ld", p->table->base);
 #endif
 	    strlcpy(str, dgettext(domain, msg), len);
 	    return str;
@@ -81,7 +81,7 @@ struct foobar {
 
 KRB5_LIB_FUNCTION void KRB5_LIB_CALL
 initialize_error_table_r(struct et_list **list,
-			 const char **messages,
+			 const char *const *messages,
 			 int num_errors,
 			 long base)
 {

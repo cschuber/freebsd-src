@@ -45,7 +45,7 @@
 int numerror;
 extern FILE *yyin;
 
-extern void yyparse(void);
+int yyparse(void);
 
 long base_id;
 int number;
@@ -56,12 +56,13 @@ char name[128];
 char Basename[128];
 
 #ifdef YYDEBUG
-extern int yydebug = 1;
+extern int yydebug;
+int yydebug = 1;
 #endif
 
 char *filename;
-char hfn[128];
-char cfn[128];
+char hfn[130];
+char cfn[130];
 
 struct error_code *codes = NULL;
 
@@ -86,7 +87,7 @@ generate_c(void)
     fprintf(c_file, "#define N_(x) (x)\n");
     fprintf(c_file, "\n");
 
-    fprintf(c_file, "static const char *%s_error_strings[] = {\n", name);
+    fprintf(c_file, "static const char *const %s_error_strings[] = {\n", name);
 
     for(ec = codes, n = 0; ec; ec = ec->next, n++) {
 	while(n < ec->number) {
@@ -128,7 +129,7 @@ static int
 generate_h(void)
 {
     struct error_code *ec;
-    char fn[128];
+    char fn[134];
     FILE *h_file = fopen(hfn, "w");
     char *p;
 
@@ -186,8 +187,8 @@ generate(void)
 int version_flag;
 int help_flag;
 struct getargs args[] = {
-    { "version", 0, arg_flag, &version_flag },
-    { "help", 0, arg_flag, &help_flag }
+    { "version", 0, arg_flag, &version_flag, NULL, NULL },
+    { "help", 0, arg_flag, &help_flag, NULL, NULL }
 };
 int num_args = sizeof(args) / sizeof(args[0]);
 

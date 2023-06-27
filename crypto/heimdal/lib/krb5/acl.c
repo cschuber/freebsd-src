@@ -81,10 +81,8 @@ acl_parse_format(krb5_context context,
     for(p = format; *p != '\0'; p++) {
 	tmp = malloc(sizeof(*tmp));
 	if(tmp == NULL) {
-	    krb5_set_error_message(context, ENOMEM,
-				   N_("malloc: out of memory", ""));
 	    acl_free_list(acl, 0);
-	    return ENOMEM;
+	    return krb5_enomem(context);
 	}
 	if(*p == 's') {
 	    tmp->type = acl_string;
@@ -121,7 +119,7 @@ acl_match_field(krb5_context context,
 		struct acl_field *field)
 {
     if(field->type == acl_string) {
-	return !strcmp(field->u.cstr, string);
+	return strcmp(field->u.cstr, string) == 0;
     } else if(field->type == acl_fnmatch) {
 	return !fnmatch(field->u.cstr, string, 0);
     } else if(field->type == acl_retval) {

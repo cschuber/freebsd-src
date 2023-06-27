@@ -36,7 +36,9 @@
 #include "roken.h"
 
 /*
- * Like write but never return partial data.
+ * Like write but blocking sockets never return partial data, i.e. we retry on
+ * EINTR.  With non-blocking sockets (EWOULDBLOCK or EAGAIN) we return the
+ * number of bytes written.
  */
 
 #ifndef _WIN32
@@ -51,10 +53,17 @@ net_write (rk_socket_t fd, const void *buf, size_t nbytes)
     while (rem > 0) {
 	count = write (fd, cbuf, rem);
 	if (count < 0) {
-	    if (errno == EINTR)
+            switch (errno) {
+            case EINTR:
 		continue;
-	    else
+#if defined(EAGAIN) && EAGAIN != EWOULDBLOCK
+            case EAGAIN:
+#endif
+            case EWOULDBLOCK:
+                return nbytes - rem;
+            default:
 		return count;
+            }
 	}
 	cbuf += count;
 	rem -= count;
@@ -62,7 +71,7 @@ net_write (rk_socket_t fd, const void *buf, size_t nbytes)
     return nbytes;
 }
 
-#else
+#else /* defined(_WIN32) */
 
 ROKEN_LIB_FUNCTION ssize_t ROKEN_LIB_CALL
 net_write(rk_socket_t sock, const void *buf, size_t nbytes)
@@ -93,10 +102,28 @@ net_write(rk_socket_t sock, const void *buf, size_t nbytes)
 	count = send (sock, cbuf, rem, 0);
 #endif
 	if (count < 0) {
-	    if (errno == EINTR)
-		continue;
-	    else
-		return count;
+#ifdef SOCKET_IS_NOT_AN_FD
+            if (!use_write) {
+                switch (rk_SOCK_ERRNO) {
+                case WSAEINTR:
+                    continue;
+                case WSAEWOULDBLOCK:
+                    return nbytes - rem;
+                default:
+                    return count;
+                }
+            } else
+#endif
+	    {
+                switch (errno) {
+                case EINTR:
+                    continue;
+                case EWOULDBLOCK:
+                    return nbytes - rem;
+                default:
+                    return count;
+                }
+            }
 	}
 	cbuf += count;
 	rem -= count;

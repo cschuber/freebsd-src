@@ -2,11 +2,11 @@
 
 include $(top_srcdir)/Makefile.am.common
 
-AM_CPPFLAGS += $(INCLUDE_readline) $(INCLUDE_hcrypto)
+AM_CPPFLAGS += $(INCLUDE_readline)
 
-man_MANS = ktutil.8
+man_MANS = ktutil.1
 
-sbin_PROGRAMS = ktutil
+bin_PROGRAMS = ktutil
 
 dist_ktutil_SOURCES =				\
 	add.c					\
@@ -37,6 +37,7 @@ LDADD = \
 	$(LIB_hcrypto) \
 	$(top_builddir)/lib/asn1/libasn1.la \
 	$(top_builddir)/lib/sl/libsl.la \
+	$(LIB_heimbase) \
 	$(LIB_readline) \
 	$(LIB_roken)
 

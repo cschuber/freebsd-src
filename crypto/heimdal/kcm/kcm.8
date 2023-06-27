@@ -33,7 +33,7 @@
 .\"
 .Dd May 29, 2005
 .Dt KCM 8
-.Os Heimdal
+.Os
 .Sh NAME
 .Nm kcm
 .Nd process-based credential cache for Kerberos tickets.
@@ -73,10 +73,6 @@
 .Fl Fl socket-path= Ns Ar path
 .Xc
 .Oc
-.Oo Xo
-.Fl Fl door-path= Ns Ar path
-.Xc
-.Oc
 .Oo Fl S Ar principal \*(Ba Xo
 .Fl Fl server= Ns Ar principal
 .Xc
@@ -95,7 +91,7 @@
 is a process based credential cache.
 To use it, set the
 .Ev KRB5CCNAME
-enviroment variable to
+environment variable to
 .Ql KCM: Ns Ar uid
 or add the stanza
 .Bd -literal
@@ -153,8 +149,6 @@ disable credentials cache name constraints
 renewable lifetime of system tickets
 .It Fl s Ar path , Fl Fl socket-path= Ns Ar path
 path to kcm domain socket
-.It Fl Fl door-path= Ns Ar path
-path to kcm door socket
 .It Fl S Ar principal , Fl Fl server= Ns Ar principal
 server to get system ticket for
 .It Fl t Ar keytab , Fl Fl keytab= Ns Ar keytab

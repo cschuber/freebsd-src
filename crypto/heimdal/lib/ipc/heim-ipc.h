@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Kungliga Tekniska Högskolan
+ * Copyright (c) 2009 Kungliga Tekniska HÃ¶gskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -39,7 +39,7 @@ typedef struct heim_ipc *heim_ipc;
 typedef struct heim_sipc *heim_sipc;
 typedef struct heim_icred *heim_icred;
 typedef struct heim_isemaphore *heim_isemaphore;
-typedef struct heim_octet_string heim_idata;
+typedef struct heim_base_data heim_idata;
 typedef struct heim_sipc_call *heim_sipc_call;
 
 /* common */
@@ -119,6 +119,9 @@ int
 heim_sipc_service_unix(const char *, heim_ipc_callback,
 		       void *, heim_sipc *);
 
+int
+heim_sipc_service_door(const char *, heim_ipc_callback,
+		       void *, heim_sipc *);
 
 void
 heim_sipc_timeout(time_t);

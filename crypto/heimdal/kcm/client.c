@@ -43,11 +43,50 @@ kcm_ccache_resolve_client(krb5_context context,
 			  kcm_ccache *ccache)
 {
     krb5_error_code ret;
+    const char *estr;
 
     ret = kcm_ccache_resolve(context, name, ccache);
     if (ret) {
-	kcm_log(1, "Failed to resolve cache %s: %s",
-		name, krb5_get_err_text(context, ret));
+        char *uid = NULL;
+
+        /*
+         * Both MIT and Heimdal are unable to, in krb5_cc_default(), call to
+         * KCM (or CCAPI, or LSA, or...) to get the user's default ccache name
+         * in their collection.  Instead, the default ccache name is obtained
+         * in a static way, and for KCM that's "%{UID}".  When we
+         * krb5_cc_switch(), we simply maintain a pointer to the name of the
+         * ccache that was made the default, but klist can't make use of this
+         * because krb5_cc_default() can't.
+         *
+         * The solution here is to first try resolving the ccache name given by
+         * the client, and if that fails but the name happens to be what would
+         * be the library's default KCM ccache name for that user, then try
+         * resolving it through the default ccache name pointer saved at switch
+         * time.
+         */
+        if (asprintf(&uid, "%llu", (unsigned long long)client->uid) == -1 ||
+            uid == NULL)
+            return ENOMEM;
+
+        if (strcmp(name, uid) == 0) {
+            struct kcm_default_cache *c;
+
+            for (c = default_caches; c != NULL; c = c->next) {
+                if (kcm_is_same_session(client, c->uid, c->session)) {
+                    if (strcmp(c->name, name) != 0) {
+                        ret = kcm_ccache_resolve(context, c->name, ccache);
+                        break;
+                    }
+                }
+            }
+        }
+        free(uid);
+    }
+
+    if (ret) {
+	estr = krb5_get_error_message(context, ret);
+	kcm_log(1, "Failed to resolve cache %s: %s", name, estr);
+	krb5_free_error_message(context, estr);
 	return ret;
     }
 
@@ -67,11 +106,13 @@ kcm_ccache_destroy_client(krb5_context context,
 {
     krb5_error_code ret;
     kcm_ccache ccache;
+    const char *estr;
 
     ret = kcm_ccache_resolve(context, name, &ccache);
     if (ret) {
-	kcm_log(1, "Failed to resolve cache %s: %s",
-		name, krb5_get_err_text(context, ret));
+	estr = krb5_get_error_message(context, ret);
+	kcm_log(1, "Failed to resolve cache %s: %s", name, estr);
+	krb5_free_error_message(context, estr);
 	return ret;
     }
 
@@ -92,6 +133,7 @@ kcm_ccache_new_client(krb5_context context,
 {
     krb5_error_code ret;
     kcm_ccache ccache;
+    const char *estr;
 
     /* We insist the ccache name starts with UID or UID: */
     if (name_constraints != 0) {
@@ -127,8 +169,9 @@ kcm_ccache_new_client(krb5_context context,
     if (ret == KRB5_FCC_NOFILE) {
 	ret = kcm_ccache_new(context, name, &ccache);
 	if (ret) {
-	    kcm_log(1, "Failed to initialize cache %s: %s",
-		    name, krb5_get_err_text(context, ret));
+	    estr = krb5_get_error_message(context, ret);
+	    kcm_log(1, "Failed to initialize cache %s: %s", name, estr);
+	    krb5_free_error_message(context, estr);
 	    return ret;
 	}
 
@@ -139,8 +182,9 @@ kcm_ccache_new_client(krb5_context context,
     } else {
 	ret = kcm_zero_ccache_data(context, ccache);
 	if (ret) {
-	    kcm_log(1, "Failed to empty cache %s: %s",
-		    name, krb5_get_err_text(context, ret));
+	    estr = krb5_get_error_message(context, ret);
+	    kcm_log(1, "Failed to empty cache %s: %s", name, estr);
+	    krb5_free_error_message(context, estr);
 	    kcm_release_ccache(context, ccache);
 	    return ret;
 	}
