@@ -21,6 +21,7 @@ SRCS=	add_enctype.c \
 	load.c \
 	mod.c \
 	pw_quality.c \
+	prune.c \
 	random_password.c \
 	rename.c \
 	stash.c \

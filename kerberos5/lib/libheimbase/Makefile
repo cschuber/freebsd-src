@@ -23,7 +23,8 @@ SRCS= \
 	number.c \
 	string.c
 
-CFLAGS+=	-I${KRB5DIR}/include
+CFLAGS+=	-I${KRB5DIR}/include \
+		-I${KRB5DIR}/lib/base
 
 .include <bsd.lib.mk>
 

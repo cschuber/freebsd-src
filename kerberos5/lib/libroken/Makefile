@@ -7,8 +7,10 @@ LIBADD=	crypt
 VERSION_MAP=	${KRB5DIR}/lib/roken/version-script.map
 INCS=	roken.h \
 	roken-common.h \
+	base32.h \
 	base64.h \
 	getarg.h \
+	getauxval.h \
 	hex.h \
 	parse_bytes.h \
 	parse_time.h \
@@ -18,10 +20,14 @@ INCS=	roken.h \
 	socket_wrapper.h \
 	xdbm.h
 
-SRCS=	base64.c \
+SRCS=	base32.c \
+	base64.c \
 	bswap.c \
+	closefrom.c \
 	concat.c \
+	copyhostent.c \
 	cloexec.c \
+	clz.c \
 	ct.c \
 	detach.c \
 	doxygen.c \
@@ -31,18 +37,19 @@ SRCS=	base64.c \
 	esetenv.c \
 	ewrite.c \
 	getaddrinfo_hostspec.c \
-	get_default_username.c \
+	mkdtemp.c \
+	mkostemp.c \
 	get_window_size.c \
 	getarg.c \
+	getauxval.c \
 	getnameinfo_verified.c \
 	getprogname.c \
-	getxxyyy.c \
 	h_errno.c \
 	hex.c \
 	hostent_find_fqdn.c \
 	issuid.c \
-	k_getpwnam.c \
-	k_getpwuid.c \
+	ftello.c \
+	mergesort_r.c \
 	mini_inetd.c \
 	mkdir.c \
 	net_read.c \
@@ -68,7 +75,7 @@ SRCS=	base64.c \
 	timeval.c \
 	tm2time.c \
 	unvis.c \
-	verify.c \
+	fseeko.c \
 	vis.c \
 	warnerr.c \
 	write_pid.c \
@@ -85,7 +92,8 @@ DIST_COMMON= \
 	strsep_copy.c \
 	strupr.c
 
-GEN=	make_roken.c
+GEN=	make_roken.c \
+	roken.h
 
 CFLAGS+=-I${KRB5DIR}/lib/roken -I.
 

@@ -1,8 +1,6 @@
 /* include/config.h.  Generated from config.h.in by configure.  */
 /* include/config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* $FreeBSD$ */
-
 #ifndef RCSID
 #define RCSID(msg) \
 static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
@@ -59,11 +57,42 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #endif
 
 
+#ifdef BUILD_KDC_LIB
+#ifndef KDC_LIB
+#ifdef _WIN32_
+#define KDC_LIB_FUNCTION __declspec(dllexport)
+#define KDC_LIB_CALL __stdcall
+#define KDC_LIB_VARIABLE __declspec(dllexport)
+#else
+#define KDC_LIB_FUNCTION
+#define KDC_LIB_CALL
+#define KDC_LIB_VARIABLE
+#endif
+#endif
+#endif
+
+
+
+#if defined(DISPATCH_FALLTHROUGH)
+# define HEIM_FALLTHROUGH DISPATCH_FALLTHROUGH
+#else
+# if defined(__GNUC__)
+#  if __GNUC__ >= 7
+#   define HEIM_FALLTHROUGH __attribute__((fallthrough))
+#  else
+#   define HEIM_FALLTHROUGH do {} while (0) /* fallthrough */
+#  endif
+# else
+#  define HEIM_FALLTHROUGH do {} while (0) /* fallthrough */
+# endif
+#endif
+
+
 /* Define if you want authentication support in telnet. */
 #define AUTHENTICATION 1
 
 /* path to bin */
-#define BINDIR "/usr/bin"
+#define BINDIR "/usr/local/bin"
 
 /* Define if realloc(NULL) doesn't work. */
 /* #undef BROKEN_REALLOC */
@@ -111,6 +140,9 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
    struct sockaddr*, socklen_t*) */
 #define GETSOCKNAME_PROTO_COMPATIBLE 1
 
+/* Define to 1 if you have the `add_key' function. */
+/* #undef HAVE_ADD_KEY */
+
 /* Define if you have the `altzone' variable. */
 /* #undef HAVE_ALTZONE */
 
@@ -138,6 +170,12 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to 1 if you have the `atexit' function. */
 #define HAVE_ATEXIT 1
 
+/* Define to 1 if you have the <auxv.h> header file. */
+/* #undef HAVE_AUXV_H */
+
+/* Define to 1 if the system has the type `auxv_t'. */
+/* #undef HAVE_AUXV_T */
+
 /* Define to 1 if you have the `backtrace' function. */
 /* #undef HAVE_BACKTRACE */
 
@@ -156,20 +194,17 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to 1 if you have the `bswap64' function. */
 /* #undef HAVE_BSWAP64 */
 
-/* Define to 1 if you have the <capability.h> header file. */
-/* #undef HAVE_CAPABILITY_H */
-
 /* whether capng is available for privilege reduction */
 /* #undef HAVE_CAPNG */
 
-/* Define to 1 if you have the `cap_set_proc' function. */
-/* #undef HAVE_CAP_SET_PROC */
-
-/* Define to 1 if you have the `cgetent' function. */
-#define HAVE_CGETENT 1
-
 /* Define if you have the function `chown'. */
 #define HAVE_CHOWN 1
+
+/* whether libcjson is available for KDC REST API */
+/* #undef HAVE_CJSON */
+
+/* whether libcjwt is available for KDC REST API */
+/* #undef HAVE_CJWT */
 
 /* Define if you have the function `closefrom'. */
 #define HAVE_CLOSEFROM 1
@@ -202,7 +237,7 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define HAVE_DB1 1
 
 /* define if you have a berkeley db3/4/5/6 library */
-/* #define HAVE_DB3 */
+/* #undef HAVE_DB3 */
 
 /* Define to 1 if you have the <db3/db.h> header file. */
 /* #undef HAVE_DB3_DB_H */
@@ -223,13 +258,13 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define HAVE_DBM_FIRSTKEY 1
 
 /* Define to 1 if you have the <dbm.h> header file. */
-/* #undef HAVE_DBM_H */
+#define HAVE_DBM_H 1
 
 /* Define to 1 if you have the `dbopen' function. */
 #define HAVE_DBOPEN 1
 
 /* Define to 1 if you have the `db_create' function. */
-/* #undef HAVE_DB_CREATE */
+#define HAVE_DB_CREATE 1
 
 /* Define to 1 if you have the <db.h> header file. */
 #define HAVE_DB_H 1
@@ -292,7 +327,10 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define HAVE_DIRFD 1
 
 /* Define if DIR has field dd_fd. */
-#define HAVE_DIR_DD_FD 1
+/* #undef HAVE_DIR_DD_FD */
+
+/* Define if DIR has field d_fd. */
+/* #undef HAVE_DIR_D_FD */
 
 /* Define to 1 if you have the `dispatch_async_f' function. */
 /* #undef HAVE_DISPATCH_ASYNC_F */
@@ -372,6 +410,9 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to 1 if you have the `fork' function. */
 #define HAVE_FORK 1
 
+/* Have -framework CoreFoundation */
+/* #undef HAVE_FRAMEWORK_COREFOUNDATION */
+
 /* Have -framework Security */
 /* #undef HAVE_FRAMEWORK_SECURITY */
 
@@ -380,6 +421,12 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 
 /* Define if you have the function `freehostent'. */
 #define HAVE_FREEHOSTENT 1
+
+/* Define to 1 if you have the `fseeko' function. */
+#define HAVE_FSEEKO 1
+
+/* Define to 1 if you have the `ftello' function. */
+#define HAVE_FTELLO 1
 
 /* Define to 1 if you have the `gai_strerror' function. */
 #define HAVE_GAI_STRERROR 1
@@ -414,9 +461,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define if you have the function `getgid'. */
 #define HAVE_GETGID 1
 
-/* Define to 1 if you have the `gethostbyname' function. */
-#define HAVE_GETHOSTBYNAME 1
-
 /* Define to 1 if you have the `gethostbyname2' function. */
 #define HAVE_GETHOSTBYNAME2 1
 
@@ -434,6 +478,9 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 
 /* Define to 1 if you have the `getlogin' function. */
 #define HAVE_GETLOGIN 1
+
+/* Define to 1 if you have the `getlogin_r' function. */
+#define HAVE_GETLOGIN_R 1
 
 /* Define if you have a working getmsg. */
 /* #undef HAVE_GETMSG */
@@ -459,30 +506,29 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to 1 if you have the `getpwnam_r' function. */
 #define HAVE_GETPWNAM_R 1
 
+/* Define to 1 if you have the `getpwuid_r' function. */
+#define HAVE_GETPWUID_R 1
+
+/* Define to 1 if you have the `getresgid' function. */
+#define HAVE_GETRESGID 1
+
+/* Define to 1 if you have the `getresuid' function. */
+#define HAVE_GETRESUID 1
+
 /* Define to 1 if you have the `getrlimit' function. */
 #define HAVE_GETRLIMIT 1
 
 /* Define to 1 if you have the `getsockopt' function. */
 #define HAVE_GETSOCKOPT 1
 
-/* Define to 1 if you have the `getspnam' function. */
-/* #undef HAVE_GETSPNAM */
-
 /* Define if you have the function `gettimeofday'. */
 #define HAVE_GETTIMEOFDAY 1
-
-/* Define to 1 if you have the `getudbnam' function. */
-/* #undef HAVE_GETUDBNAM */
 
 /* Define if you have the function `getuid'. */
 #define HAVE_GETUID 1
 
 /* Define if you have the function `getusershell'. */
 #define HAVE_GETUSERSHELL 1
-
-/* define if you have a glob() that groks GLOB_BRACE, GLOB_NOCHECK,
-   GLOB_QUOTE, GLOB_TILDE, and GLOB_LIMIT */
-#define HAVE_GLOB 1
 
 /* Define to 1 if you have the `grantpt' function. */
 #define HAVE_GRANTPT 1
@@ -547,17 +593,20 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define if you have IPv6. */
 #define HAVE_IPV6 1
 
-/* Define if you have the function `iruserok'. */
-#define HAVE_IRUSEROK 1
-
 /* Define to 1 if you have the `issetugid' function. */
 #define HAVE_ISSETUGID 1
 
 /* Define if you want to use the Kerberos Credentials Manager. */
 #define HAVE_KCM 1
 
-/* Define to 1 if you have the `kill' function. */
-#define HAVE_KILL 1
+/* Define to 1 if you have the `keyctl_get_persistent' function. */
+/* #undef HAVE_KEYCTL_GET_PERSISTENT */
+
+/* Define to 1 if you have the <keyutils.h> header file. */
+/* #undef HAVE_KEYUTILS_H */
+
+/* Define to 1 if you have the `util' library (-lutil). */
+#define HAVE_LIBUTIL 1
 
 /* Define to 1 if you have the <libutil.h> header file. */
 #define HAVE_LIBUTIL_H 1
@@ -577,12 +626,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define if you have the function `localtime_r'. */
 #define HAVE_LOCALTIME_R 1
 
-/* Define to 1 if you have the `logout' function. */
-/* #undef HAVE_LOGOUT */
-
-/* Define to 1 if you have the `logwtmp' function. */
-/* #undef HAVE_LOGWTMP */
-
 /* Define to 1 if the system has the type `long long'. */
 #define HAVE_LONG_LONG 1
 
@@ -592,26 +635,41 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to 1 if you have the <maillock.h> header file. */
 #define HAVE_MAILLOCK_H 1
 
+/* Define to 1 if you have the `memmem' function. */
+#define HAVE_MEMMEM 1
+
 /* Define if you have the function `memmove'. */
 #define HAVE_MEMMOVE 1
 
 /* Define if you have the function `memset_s'. */
 #define HAVE_MEMSET_S 1
 
+/* Define if you have the function `mergesort'. */
+#define HAVE_MERGESORT 1
+
+/* Define if you have the function `mergesort_r'. */
+/* #undef HAVE_MERGESORT_R */
+
+/* whether libmicrohttpd is available for KDC REST API */
+/* #undef HAVE_MICROHTTPD */
+
+/* Define to 1 if you have the `mkdtemp' function. */
+#define HAVE_MKDTEMP 1
+
+/* Define to 1 if you have the `mkostemp' function. */
+#define HAVE_MKOSTEMP 1
+
 /* Define if you have the function `mkstemp'. */
 #define HAVE_MKSTEMP 1
-
-/* Define to 1 if you have the `mktime' function. */
-#define HAVE_MKTIME 1
 
 /* Define to 1 if you have a working `mmap' system call. */
 #define HAVE_MMAP 1
 
 /* define if you have a ndbm library */
-#define HAVE_NDBM 1
+/* #undef HAVE_NDBM */
 
 /* Define to 1 if you have the <ndbm.h> header file. */
-#define HAVE_NDBM_H 1
+/* #undef HAVE_NDBM_H */
 
 /* Define to 1 if you have the <netdb.h> header file. */
 #define HAVE_NETDB_H 1
@@ -647,13 +705,22 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define HAVE_NET_IF_H 1
 
 /* Define if NDBM really is DB (creates files *.db) */
-#define HAVE_NEW_DB 1
+/* #undef HAVE_NEW_DB */
 
 /* Define to 1 if you have the `on_exit' function. */
 /* #undef HAVE_ON_EXIT */
 
 /* Define to 1 if you have the `openpty' function. */
 #define HAVE_OPENPTY 1
+
+/* whether OpenSSL is 3.0 or higher */
+#define HAVE_OPENSSL_30 1
+
+/* whether openssl/fips.h is available */
+/* #undef HAVE_OPENSSL_FIPS_H */
+
+/* whether FIPS_mode_set API is available */
+/* #undef HAVE_OPENSSL_FIPS_MODE_SET_API */
 
 /* Define to enable basic OSF C2 support. */
 /* #undef HAVE_OSFC2 */
@@ -673,8 +740,8 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to 1 if you have the <pthread.h> header file. */
 #define HAVE_PTHREAD_H 1
 
-/* Define to 1 if you have the `ptsname' function. */
-#define HAVE_PTSNAME 1
+/* Define to 1 if you have the `ptsname_r' function. */
+#define HAVE_PTSNAME_R 1
 
 /* Define to 1 if you have the <pty.h> header file. */
 /* #undef HAVE_PTY_H */
@@ -721,9 +788,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to 1 if you have the `res_search' function. */
 #define HAVE_RES_SEARCH 1
 
-/* Define to 1 if you have the `revoke' function. */
-#define HAVE_REVOKE 1
-
 /* Define to 1 if you have the <rpcsvc/ypclnt.h> header file. */
 #define HAVE_RPCSVC_YPCLNT_H 1
 
@@ -734,16 +798,16 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define HAVE_SA_FAMILY_T 1
 
 /* Define if you want support for cache in sqlite. */
-/* #undef HAVE_SCC */
+/*#undef HAVE_SCC */
 
 /* Define to 1 if you have the <search.h> header file. */
 #define HAVE_SEARCH_H 1
 
+/* Define to 1 if you have the `secure_getenv' function. */
+#define HAVE_SECURE_GETENV 1
+
 /* Define to 1 if you have the <security/pam_modules.h> header file. */
 #define HAVE_SECURITY_PAM_MODULES_H 1
-
-/* Define to 1 if you have the `select' function. */
-#define HAVE_SELECT 1
 
 /* Define if you have the function `sendmsg'. */
 #define HAVE_SENDMSG 1
@@ -760,20 +824,8 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to 1 if you have the `setitimer' function. */
 #define HAVE_SETITIMER 1
 
-/* Define to 1 if you have the `setlim' function. */
-/* #undef HAVE_SETLIM */
-
 /* Define to 1 if you have the `setlogin' function. */
 #define HAVE_SETLOGIN 1
-
-/* Define to 1 if you have the `setpcred' function. */
-/* #undef HAVE_SETPCRED */
-
-/* Define to 1 if you have the `setpgid' function. */
-#define HAVE_SETPGID 1
-
-/* Define to 1 if you have the `setproctitle' function. */
-#define HAVE_SETPROCTITLE 1
 
 /* Define to 1 if you have the `setprogname' function. */
 #define HAVE_SETPROGNAME 1
@@ -796,12 +848,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to 1 if you have the `setsockopt' function. */
 #define HAVE_SETSOCKOPT 1
 
-/* Define to 1 if you have the `setutent' function. */
-/* #undef HAVE_SETUTENT */
-
-/* Define to 1 if you have the `sgi_getcapabilitybyname' function. */
-/* #undef HAVE_SGI_GETCAPABILITYBYNAME */
-
 /* Define to 1 if you have the <sgtty.h> header file. */
 /* #undef HAVE_SGTTY_H */
 
@@ -820,9 +866,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* define if you have a working snprintf */
 #define HAVE_SNPRINTF 1
 
-/* Define to 1 if you have the `socket' function. */
-#define HAVE_SOCKET 1
-
 /* Define to 1 if the system has the type `socklen_t'. */
 #define HAVE_SOCKLEN_T 1
 
@@ -834,6 +877,9 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 
 /* Define to 1 if you have the <standards.h> header file. */
 /* #undef HAVE_STANDARDS_H */
+
+/* Define to 1 if you have the <stdatomic.h> header file. */
+#define HAVE_STDATOMIC_H 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
@@ -894,9 +940,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 
 /* Define if you have the function `strsep_copy'. */
 /* #undef HAVE_STRSEP_COPY */
-
-/* Define to 1 if you have the `strstr' function. */
-#define HAVE_STRSTR 1
 
 /* Define to 1 if you have the `strsvis' function. */
 #define HAVE_STRSVIS 1
@@ -970,9 +1013,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to 1 if you have the `sysctl' function. */
 #define HAVE_SYSCTL 1
 
-/* Define to 1 if you have the `syslog' function. */
-#define HAVE_SYSLOG 1
-
 /* Define to 1 if you have the <syslog.h> header file. */
 #define HAVE_SYSLOG_H 1
 
@@ -985,14 +1025,14 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to 1 if you have the <sys/bswap.h> header file. */
 /* #undef HAVE_SYS_BSWAP_H */
 
-/* Define to 1 if you have the <sys/capability.h> header file. */
-/* #undef HAVE_SYS_CAPABILITY_H */
-
 /* Define to 1 if you have the <sys/category.h> header file. */
 /* #undef HAVE_SYS_CATEGORY_H */
 
 /* Define to 1 if you have the <sys/errno.h> header file. */
 #define HAVE_SYS_ERRNO_H 1
+
+/* Define to 1 if you have the <sys/exec_elf.h> header file. */
+/* #undef HAVE_SYS_EXEC_ELF_H */
 
 /* Define to 1 if you have the <sys/file.h> header file. */
 #define HAVE_SYS_FILE_H 1
@@ -1126,12 +1166,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define if you have the function `tsearch'. */
 #define HAVE_TSEARCH 1
 
-/* Define to 1 if you have the `ttyname' function. */
-#define HAVE_TTYNAME 1
-
-/* Define to 1 if you have the `ttyslot' function. */
-/* #undef HAVE_TTYSLOT */
-
 /* Define to 1 if you have the `twalk' function. */
 #define HAVE_TWALK 1
 
@@ -1153,14 +1187,14 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to 1 if the system has the type `uintptr_t'. */
 #define HAVE_UINTPTR_T 1
 
-/* Define to 1 if you have the `umask' function. */
-#define HAVE_UMASK 1
-
 /* Define to 1 if you have the `uname' function. */
 #define HAVE_UNAME 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
+
+/* Define to 1 if you have the `unlinkat' function. */
+#define HAVE_UNLINKAT 1
 
 /* Define to 1 if you have the `unlockpt' function. */
 #define HAVE_UNLOCKPT 1
@@ -1204,9 +1238,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define if you have the function `verrx'. */
 #define HAVE_VERRX 1
 
-/* Define to 1 if you have the `vhangup' function. */
-/* #undef HAVE_VHANGUP */
-
 /* Define to 1 if you have the `vis' function. */
 #define HAVE_VIS 1
 
@@ -1248,12 +1279,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 
 /* define if struct winsize has ws_ypixel */
 #define HAVE_WS_YPIXEL 1
-
-/* Define to 1 if you have the `yp_get_default_domain' function. */
-#define HAVE_YP_GET_DEFAULT_DOMAIN 1
-
-/* Define to 1 if you have the `_getpty' function. */
-/* #undef HAVE__GETPTY */
 
 /* Define if you have the `_res' variable. */
 #define HAVE__RES 1
@@ -1322,17 +1347,11 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* define if the system is missing a prototype for getusershell() */
 /* #undef NEED_GETUSERSHELL_PROTO */
 
-/* define if the system is missing a prototype for glob() */
-/* #undef NEED_GLOB_PROTO */
-
 /* define if the system is missing a prototype for hstrerror() */
 /* #undef NEED_HSTRERROR_PROTO */
 
 /* define if the system is missing a prototype for inet_aton() */
 /* #undef NEED_INET_ATON_PROTO */
-
-/* define if the system is missing a prototype for iruserok() */
-/* #undef NEED_IRUSEROK_PROTO */
 
 /* define if the system is missing a prototype for mkstemp() */
 /* #undef NEED_MKSTEMP_PROTO */
@@ -1426,7 +1445,7 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define PACKAGE_NAME "Heimdal"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Heimdal 7.8.0"
+#define PACKAGE_STRING "Heimdal 7.99.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "heimdal"
@@ -1435,7 +1454,7 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "7.8.0"
+#define PACKAGE_VERSION "7.99.1"
 
 /* path to PKCS11 module */
 /* #undef PKCS11_MODULE_PATH */
@@ -1446,8 +1465,14 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define if getlogin has POSIX flavour (and not BSD). */
 /* #undef POSIX_GETLOGIN */
 
+/* Define if getlogin_r has POSIX flavour (and not BSD). */
+/* #undef POSIX_GETLOGIN_R */
+
 /* Define if getpwnam_r has POSIX flavour. */
 #define POSIX_GETPWNAM_R 1
+
+/* Define if getpwuid_r has POSIX flavour. */
+#define POSIX_GETPWUID_R 1
 
 /* Define if you have the readline package. */
 #define READLINE 1
@@ -1456,7 +1481,17 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 #define RETSIGTYPE void
 
 /* path to sbin */
-#define SBINDIR "/usr/local/sbin"
+#define SBINDIR "/usr/bin"
+
+/* The size of `key_serial_t', as computed by sizeof. */
+/* #undef SIZEOF_KEY_SERIAL_T */
+
+/* The size of `time_t', as computed by sizeof. */
+#if defined(__i386__)
+#define SIZEOF_TIME_T 4
+#else
+#define SIZEOF_TIME_T 8
+#endif 
 
 /* Define if you want to use samba socket wrappers. */
 /* #undef SOCKET_WRAPPER_REPLACE */
@@ -1485,6 +1520,12 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define to what version of SunOS you are running. */
 /* #undef SunOS */
 
+/* Define if time_t is signed */
+#define TIME_T_SIGNED 1
+
+/* Define if time_t is unsigned */
+/* #undef TIME_T_UNSIGNED */
+
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. This
    macro is obsolete. */
 #define TIME_WITH_SYS_TIME 1
@@ -1493,7 +1534,7 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* #undef TM_IN_SYS_TIME */
 
 /* Version number of package */
-#define VERSION "7.8.0"
+#define VERSION "7.99.1"
 
 /* Define if signal handlers return void. */
 #define VOID_RETSIGTYPE 1
@@ -1567,26 +1608,6 @@ struct sockaddr_dl;
 struct sockaddr_in;
 #endif
 
-#ifdef ROKEN_RENAME
-#include "roken_rename.h"
-#endif
-
-#ifdef VOID_RETSIGTYPE
-#define SIGRETURN(x) return
-#else
-#define SIGRETURN(x) return (RETSIGTYPE)(x)
-#endif
-
-
-#ifdef ENDIANESS_IN_SYS_PARAM_H
-#  include <sys/types.h>
-#  include <sys/param.h>
-#  if BYTE_ORDER == BIG_ENDIAN
-#  define WORDS_BIGENDIAN 1
-#  endif
-#endif
-
-
 
 
 /* Set this to the default system lead string for telnetd 
@@ -1607,3 +1628,23 @@ struct sockaddr_in;
 #ifdef __APPLE__
 #include <AvailabilityMacros.h>
 #endif
+
+#ifdef ROKEN_RENAME
+#include "roken_rename.h"
+#endif
+
+#ifdef VOID_RETSIGTYPE
+#define SIGRETURN(x) return
+#else
+#define SIGRETURN(x) return (RETSIGTYPE)(x)
+#endif
+
+
+#ifdef ENDIANESS_IN_SYS_PARAM_H
+#  include <sys/types.h>
+#  include <sys/param.h>
+#  if BYTE_ORDER == BIG_ENDIAN
+#  define WORDS_BIGENDIAN 1
+#  endif
+#endif
+

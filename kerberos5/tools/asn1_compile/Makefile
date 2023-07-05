@@ -19,15 +19,18 @@ SRCS=	\
 	gen_free.c \
 	gen_glue.c \
 	gen_length.c \
+	gen_print.c \
 	gen_seq.c \
 	gen_template.c \
 	hash.c \
 	lex.l \
 	main.c \
 	roken.h \
-	symbol.c
+	symbol.c \
+	roken.h
 
-CFLAGS+=-I${KRB5DIR}/lib/roken -I${KRB5DIR}/lib/asn1 -I.
+CFLAGS+=-I${KRB5DIR}/lib/roken -I${KRB5DIR}/lib/asn1 \
+	-I${KRB5DIR}/include -I.
 
 CLEANFILES= roken.h lex.c parse.c
 

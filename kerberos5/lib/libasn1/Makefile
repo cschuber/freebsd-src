@@ -4,7 +4,7 @@ PACKAGE=	kerberos-lib
 
 LIB=	asn1
 LDFLAGS=	-Wl,--no-undefined
-INCS=	asn1_err.h asn1-common.h heim_asn1.h der.h der-protos.h der-private.h
+INCS=	asn1_err.h asn1-common.h heim_asn1.h der.h
 LIBADD=	com_err roken
 VERSION_MAP=	${.CURDIR}/version.map
 
@@ -21,6 +21,7 @@ SRCS=	asn1_err.c \
 	extra.c \
 	template.c \
 	timegm.c \
+	${GEN} \
 	${GEN:S/.x$/.c/:S/.hx$/.h/}
 
 CFLAGS+=-I${KRB5DIR}/lib/asn1 -I${KRB5DIR}/lib/roken \
