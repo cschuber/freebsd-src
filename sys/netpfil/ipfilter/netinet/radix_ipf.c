@@ -32,7 +32,7 @@
 static ipf_rdx_node_t *ipf_rx_insert(ipf_rdx_head_t *,
 					  ipf_rdx_node_t nodes[2], int *);
 static void ipf_rx_attach_mask(ipf_rdx_node_t *, ipf_rdx_mask_t *);
-static int count_mask_bits(addrfamily_t *, u_32_t **);
+static int count_mask_bits(addrfamily_t *, radix_t **);
 static void buildnodes(addrfamily_t *, addrfamily_t *,
 			    ipf_rdx_node_t n[2]);
 static ipf_rdx_node_t *ipf_rx_find_addr(ipf_rdx_node_t *, addrfamily_t *);
@@ -63,10 +63,10 @@ static ipf_rdx_node_t *ipf_rx_match(ipf_rdx_head_t *, addrfamily_t *);
 /* as the guide for which bit is the most significant bit.                  */
 /* ------------------------------------------------------------------------ */
 static int
-count_mask_bits(addrfamily_t *mask, u_32_t **lastp)
+count_mask_bits(addrfamily_t *mask, radix_t **lastp)
 {
-	radix_t *mp = (u_32_t *)&mask->adf_addr;
-	u_32_t m;
+	radix_t *mp = (radix_t *)&mask->adf_addr;
+	radix_t m;
 	int count = 0;
 	int mlen;
 
@@ -100,9 +100,9 @@ count_mask_bits(addrfamily_t *mask, u_32_t **lastp)
 static void
 buildnodes(addrfamily_t *addr, addrfamily_t *mask, ipf_rdx_node_t nodes[2])
 {
-	u_32_t maskbits;
-	u_32_t lastmask;
-	u_32_t *last;
+	radix_t maskbits;
+	radix_t lastmask;
+	radix_t *last;
 	int masklen;
 
 	last = NULL;
@@ -111,15 +111,15 @@ buildnodes(addrfamily_t *addr, addrfamily_t *mask, ipf_rdx_node_t nodes[2])
 		masklen = 0;
 		lastmask = 0;
 	} else {
-		masklen = last - (u_32_t *)mask;
+		masklen = last - (radix_t *)mask;
 		lastmask = *last;
 	}
 
 	bzero(&nodes[0], sizeof(ipf_rdx_node_t) * 2);
 	nodes[0].maskbitcount = maskbits;
 	nodes[0].index = -1 - (ADF_OFF_BITS + maskbits);
-	nodes[0].addrkey = (u_32_t *)addr;
-	nodes[0].maskkey = (u_32_t *)mask;
+	nodes[0].addrkey = (radix_t *)addr;
+	nodes[0].maskkey = (radix_t *)mask;
 	nodes[0].addroff = nodes[0].addrkey + masklen;
 	nodes[0].maskoff = nodes[0].maskkey + masklen;
 	nodes[0].parent = &nodes[1];
@@ -148,9 +148,11 @@ static ipf_rdx_node_t *
 ipf_rx_find_addr(ipf_rdx_node_t *tree, addrfamily_t *addr)
 {
 	ipf_rdx_node_t *cur;
+	radix_t bitmask;
 
 	for (cur = tree; cur->index >= 0;) {
-		if (cur->bitmask & addr[cur->offset]) {
+		bitmask = addr[cur->offset];
+		if ((radix_t) cur->bitmask & (radix_t *) addr[cur->offset]) {
 			cur = cur->right;
 		} else {
 			cur = cur->left;
@@ -188,7 +190,7 @@ ipf_rx_match(ipf_rdx_head_t *head, addrfamily_t *addr)
 	int i;
 
 	len = addr->adf_len;
-	end = (u_32_t *)((u_char *)addr + len);
+	end = (radix_t *)((u_char *)addr + len);
 	node = ipf_rx_find_addr(head->root, addr);
 
 	/*
@@ -198,7 +200,7 @@ ipf_rx_match(ipf_rdx_head_t *head, addrfamily_t *addr)
 		i = cur[0].addroff - cur[0].addrkey;
 		data = cur[0].addrkey + i;
 		mask = cur[0].maskkey + i;
-		key = (u_32_t *)addr + i;
+		key = (radix_t *)addr + i;
 		for (; key < end; data++, key++, mask++)
 			if ((*key & *mask) != *data)
 				break;
@@ -206,7 +208,7 @@ ipf_rx_match(ipf_rdx_head_t *head, addrfamily_t *addr)
 			return (cur);	/* Equal keys */
 	}
 	prev = node->parent;
-	key = (u_32_t *)addr;
+	key = (radix_t *)addr;
 
 	for (node = prev; node->root == 0; node = node->parent) {
 		/*
@@ -263,7 +265,7 @@ ipf_rx_lookup(ipf_rdx_head_t *head, addrfamily_t *addr, addrfamily_t *mask)
 	if (count != found->maskbitcount && found->dupkey == NULL)
 		return (NULL);
 
-	akey = (u_32_t *)addr;
+	akey = (radix_t *)addr;
 	if ((found->addrkey[found->offset] & found->maskkey[found->offset]) !=
 	    akey[found->offset])
 		return (NULL);
@@ -326,7 +328,7 @@ ipf_rx_insert(ipf_rdx_head_t *head, ipf_rdx_node_t nodes[2], int *dup)
 	ipf_rdx_mask_t *mask;
 	ipf_rdx_node_t *cur;
 	u_32_t nodemask;
-	addrfaily_t *addr;
+	addrfamily_t *addr;
 	radix_t *data;
 	int nodebits;
 	radix_t *key;
@@ -337,13 +339,13 @@ ipf_rx_insert(ipf_rdx_head_t *head, ipf_rdx_node_t nodes[2], int *dup)
 	int nlen;
 	int len;
 
-	addr = nodes[0].addrkey;
+	addr = (addrfamily_t *) nodes[0].addrkey;
 
 	node = ipf_rx_find_addr(head->root, addr);
 	len = ((addrfamily_t *)addr)->adf_len;
-	key = (u_32_t *)&((addrfamily_t *)addr)->adf_addr;
-	data= (u_32_t *)&((addrfamily_t *)node->addrkey)->adf_addr;
-	end = (u_32_t *)((u_char *)addr + len);
+	key = (radix_t *)&((addrfamily_t *)addr)->adf_addr;
+	data= (radix_t *)&((addrfamily_t *)node->addrkey)->adf_addr;
+	end = (radix_t *)((u_char *)addr + len);
 	for (nlen = 0; key < end; data++, key++, nlen += 32)
 		if (*key != *data)
 			break;
@@ -817,8 +819,8 @@ ipf_rx_inithead(radix_softc_t *softr, ipf_rdx_head_t **headp)
 	node[2].offset = ADF_OFF_BITS >> 5;
 	node[1].left = &node[0];
 	node[1].right = &node[2];
-	node[0].addrkey = (u_32_t *)softr->zeros;
-	node[2].addrkey = (u_32_t *)softr->ones;
+	node[0].addrkey = (radix_t *)softr->zeros;
+	node[2].addrkey = (radix_t *)softr->ones;
 #ifdef RDX_DEBUG
 	(void) strcpy(node[0].name, "0_ROOT");
 	(void) strcpy(node[1].name, "1_ROOT");
