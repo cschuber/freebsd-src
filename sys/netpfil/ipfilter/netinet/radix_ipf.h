@@ -11,6 +11,19 @@ typedef unsigned int u_32_t;
 # define	U_32_T	1
 #endif
 
+#ifndef RADIX_T
+# ifdef __LP64__
+/* 128-bit keys are easily supported on 64-bit platforms, */
+/* supporting IPv6. */
+typedef unsigned __int128 radix_t;
+# else
+/* 32-bit platforms will disappear in a short while, */
+/* are therefore not supported by 128-bit (IPv6) keys. */
+typedef unsigned int radix_t;
+# endif
+# define	RADIX_T	1
+#endif
+
 typedef struct ipf_rdx_mask {
 	struct ipf_rdx_mask	*next;
 	struct ipf_rdx_node	*node;
@@ -25,10 +38,10 @@ typedef struct ipf_rdx_node {
 	struct ipf_rdx_node	*dupkey;
 	struct ipf_rdx_mask	*masks;
 	struct ipf_rdx_mask	*mymask;
-	u_32_t			*addrkey;
-	u_32_t			*maskkey;
-	u_32_t			*addroff;
-	u_32_t			*maskoff;
+	radix_t			*addrkey;
+	radix_t			*maskkey;
+	radix_t			*addroff;
+	radix_t			*maskoff;
 	u_32_t			lastmask;
 	u_32_t			bitmask;
 	int			offset;

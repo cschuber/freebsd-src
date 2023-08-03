@@ -118,8 +118,8 @@ buildnodes(addrfamily_t *addr, addrfamily_t *mask, ipf_rdx_node_t nodes[2])
 	bzero(&nodes[0], sizeof(ipf_rdx_node_t) * 2);
 	nodes[0].maskbitcount = maskbits;
 	nodes[0].index = -1 - (ADF_OFF_BITS + maskbits);
-	nodes[0].addrkey = (u_32_t *)addr;
-	nodes[0].maskkey = (u_32_t *)mask;
+	nodes[0].addrkey = (radix_t *)addr;
+	nodes[0].maskkey = (radix_t *)mask;
 	nodes[0].addroff = nodes[0].addrkey + masklen;
 	nodes[0].maskoff = nodes[0].maskkey + masklen;
 	nodes[0].parent = &nodes[1];
